@@ -39,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.serranoie.app.media.sorter.ui.theme.util.ComponentPreview
 import com.serranoie.app.media.sorter.ui.theme.util.PreviewWrapper
@@ -188,8 +189,8 @@ fun PaddedListGroup(
             Text(
                 text = it,
                 style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.outline,
-                modifier = Modifier.padding(bottom = 10.dp)
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(bottom = 10.dp, start = 4.dp)
             )
         }
 
@@ -398,7 +399,7 @@ data class SettingItem(
     val title: String, val subtitle: String? = null, val icon: ImageVector, val onClick: () -> Unit
 )
 
-@ComponentPreview
+@Preview(showBackground = true)
 @Composable
 fun FlexibleSettingsGroupPreview() {
     PreviewWrapper {

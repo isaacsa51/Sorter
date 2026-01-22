@@ -22,11 +22,13 @@ class SettingsDataStore(private val context: Context) {
         private val USE_DYNAMIC_COLORS_KEY = booleanPreferencesKey("use_dynamic_colors")
         private val USE_BLURRED_BACKGROUND_KEY = booleanPreferencesKey("use_blurred_background")
         private val TUTORIAL_COMPLETED_KEY = booleanPreferencesKey("tutorial_completed")
+        private val AUTO_PLAY_VIDEOS_KEY = booleanPreferencesKey("auto_play_videos")
         
         private const val DEFAULT_THEME_MODE = "SYSTEM"
         private const val DEFAULT_USE_DYNAMIC_COLORS = true
         private const val DEFAULT_USE_BLURRED_BACKGROUND = true
         private const val DEFAULT_TUTORIAL_COMPLETED = false
+        private const val DEFAULT_AUTO_PLAY_VIDEOS = false
     }
     
     val appSettingsFlow: Flow<AppSettings> = dataStore.data.map { preferences ->
@@ -36,7 +38,8 @@ class SettingsDataStore(private val context: Context) {
             ),
             useDynamicColors = preferences[USE_DYNAMIC_COLORS_KEY] ?: DEFAULT_USE_DYNAMIC_COLORS,
             useBlurredBackground = preferences[USE_BLURRED_BACKGROUND_KEY] ?: DEFAULT_USE_BLURRED_BACKGROUND,
-            tutorialCompleted = preferences[TUTORIAL_COMPLETED_KEY] ?: DEFAULT_TUTORIAL_COMPLETED
+            tutorialCompleted = preferences[TUTORIAL_COMPLETED_KEY] ?: DEFAULT_TUTORIAL_COMPLETED,
+            autoPlayVideos = preferences[AUTO_PLAY_VIDEOS_KEY] ?: DEFAULT_AUTO_PLAY_VIDEOS
         )
     }
     
@@ -67,6 +70,12 @@ class SettingsDataStore(private val context: Context) {
     suspend fun resetTutorial() {
         dataStore.edit { preferences ->
             preferences[TUTORIAL_COMPLETED_KEY] = false
+        }
+    }
+    
+    suspend fun setAutoPlayVideos(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[AUTO_PLAY_VIDEOS_KEY] = enabled
         }
     }
 

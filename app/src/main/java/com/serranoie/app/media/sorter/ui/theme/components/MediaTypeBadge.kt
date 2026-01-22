@@ -19,21 +19,26 @@ import com.serranoie.app.media.sorter.ui.theme.util.PreviewWrapper
  * Badge component that displays the media type (e.g., JPG, MP4)
  *
  * @param mediaType The type of media ("video" or other for images)
+ * @param fileName The filename to extract the extension from
  * @param modifier Modifier to be applied to the badge
  */
 @Composable
 fun MediaTypeBadge(
-    mediaType: String, modifier: Modifier = Modifier
+    mediaType: String,
+    fileName: String = "",
+    modifier: Modifier = Modifier
 ) {
     val isVideo = mediaType == "video"
     val colorScheme = MaterialTheme.colorScheme
+    
+    val extension = fileName.substringAfterLast('.', "").uppercase()
+        .takeIf { it.isNotEmpty() } 
+        ?: if (isVideo) "MP4" else "JPG" // Fallback if no extension found
 
     Surface(
-        modifier = modifier, shape = RoundedCornerShape(16.dp), color = if (isVideo) {
-            colorScheme.secondaryContainer
-        } else {
-            colorScheme.secondaryContainer
-        }, tonalElevation = 1.dp
+        modifier = modifier, shape = RoundedCornerShape(16.dp), 
+        color = colorScheme.secondaryContainer,
+        tonalElevation = 1.dp
     ) {
         Row(
             modifier = Modifier.padding(
@@ -47,21 +52,16 @@ fun MediaTypeBadge(
                     Icons.Default.VideoLibrary
                 } else {
                     Icons.Default.Image
-                }, contentDescription = null, modifier = Modifier.size(18.dp), tint = if (isVideo) {
-                    colorScheme.onSecondaryContainer
-                } else {
-                    colorScheme.onSecondaryContainer
-                }
+                }, 
+                contentDescription = null, 
+                modifier = Modifier.size(18.dp), 
+                tint = colorScheme.onSecondaryContainer
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-                text = if (isVideo) "MP4" else "JPG",
+                text = extension,
                 style = MaterialTheme.typography.labelLargeEmphasized,
-                color = if (isVideo) {
-                    colorScheme.onSecondaryContainer
-                } else {
-                    colorScheme.onSecondaryContainer
-                },
+                color = colorScheme.onSecondaryContainer
             )
         }
     }

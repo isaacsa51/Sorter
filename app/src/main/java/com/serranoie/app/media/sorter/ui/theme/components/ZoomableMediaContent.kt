@@ -16,7 +16,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
+import coil.decode.VideoFrameDecoder
 import coil.request.ImageRequest
+import coil.request.videoFrameMillis
 
 /**
  * Static media content displayed in the card with shared element transition support.
@@ -45,26 +47,28 @@ fun ZoomableMediaContent(
 
     with(sharedTransitionScope) {
         if (uri != null) {
-            val imageRequest = remember(uri) {
+            val imageRequest = remember(uri, mediaType) {
                 ImageRequest.Builder(context)
                     .data(uri)
                     .crossfade(300)
+                    .apply {
+                        if (mediaType == "video") {
+                            decoderFactory { result, options, _ ->
+                                VideoFrameDecoder(result.source, options)
+                            }
+                            videoFrameMillis(1000)
+                        }
+                    }
                     .build()
             }
 
-            // Create shared element key based on URI
             val sharedElementKey = ImageElementKey(uri)
-
-            // Static image with shared element transition
             SubcomposeAsyncImage(
                 model = imageRequest,
                 contentDescription = fileName,
                 modifier = modifier
                     .then(
                         if (isVisible) {
-                            // Apply shared bounds transition with shape morphing
-                            // - Card has 24dp rounded corners (restingShapeCornerRadius)
-                            // - Transitions to 0dp square corners when zooming (targetShapeCornerRadius)
                             Modifier.sharedBoundsRevealWithShapeMorph(
                                 sharedContentState = rememberSharedContentState(key = sharedElementKey),
                                 sharedTransitionScope = sharedTransitionScope,

@@ -76,6 +76,13 @@ dependencies {
     implementation(libs.coil.video)
     implementation(libs.telephoto.zoomable.image.coil)
 
+    // ExoPlayer for video playback
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.ui)
+    
+    // Wavy Slider for video progress
+    implementation(libs.wavy.slider)
+
 	implementation("com.google.dagger:hilt-android:2.57.1")
 	kapt("com.google.dagger:hilt-android-compiler:2.57.1")
 	implementation(libs.androidx.hilt.navigation.compose)

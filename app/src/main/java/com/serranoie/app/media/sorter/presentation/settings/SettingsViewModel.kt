@@ -85,6 +85,19 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun setAutoPlayVideos(enabled: Boolean) {
+        viewModelScope.launch {
+            updateSettings.setAutoPlayVideos(enabled)
+        }
+    }
+
+    fun toggleAutoPlayVideos() {
+        viewModelScope.launch {
+            val current = appSettings.value.autoPlayVideos
+            updateSettings.setAutoPlayVideos(!current)
+        }
+    }
+
     fun resetToDefaults() {
         viewModelScope.launch {
             updateSettings.resetSettings()

@@ -30,7 +30,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
+import coil.decode.VideoFrameDecoder
 import coil.request.ImageRequest
+import coil.request.videoFrameMillis
 import me.saket.telephoto.zoomable.rememberZoomableState
 import me.saket.telephoto.zoomable.zoomable
 import kotlin.math.roundToInt
@@ -48,6 +50,7 @@ import kotlin.math.roundToInt
  * 
  * @param uri The URI of the media to display
  * @param fileName The name of the file (for content description)
+ * @param mediaType The type of media ("image" or "video")
  * @param sharedTransitionScope The scope managing shared transitions
  * @param animatedVisibilityScope The scope for animated visibility
  * @param isVisible Whether the overlay is visible
@@ -59,6 +62,7 @@ import kotlin.math.roundToInt
 fun ZoomOverlay(
     uri: Uri?,
     fileName: String,
+    mediaType: String = "image",
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
     isVisible: Boolean,
@@ -74,7 +78,6 @@ fun ZoomOverlay(
             exit = fadeOut(),
             modifier = modifier
         ) {
-            // Track vertical drag offset for swipe-to-dismiss
             var offsetY by remember { mutableFloatStateOf(0f) }
             val dismissThreshold = 200f // Pixels to swipe down before dismissing
             
@@ -85,27 +88,29 @@ fun ZoomOverlay(
                     .clickable { onDismiss() }
             ) {
                 if (uri != null) {
-                    val imageRequest = remember(uri) {
+                    val imageRequest = remember(uri, mediaType) {
                         ImageRequest.Builder(context)
                             .data(uri)
                             .crossfade(300)
+                            .apply {
+                                if (mediaType == "video") {
+                                    decoderFactory { result, options, _ ->
+                                        VideoFrameDecoder(result.source, options)
+                                    }
+                                    videoFrameMillis(1000)
+                                }
+                            }
                             .build()
                     }
 
-                    // Create shared element key based on URI
                     val sharedElementKey = ImageElementKey(uri)
-                    
                     val zoomableState = rememberZoomableState()
                     
-                    // Track zoom level
                     val currentScale = zoomableState.contentTransformation.scale.scaleX
                     val isZoomedOut = currentScale <= 1.01f // At or near default scale
                     
-                    // Track double-tap when zoomed out
                     var lastTapTime by remember { mutableStateOf(0L) }
                     val doubleTapThreshold = 300L // ms
-
-                    // Fully zoomable image with shared element transition
                     SubcomposeAsyncImage(
                         model = imageRequest,
                         contentDescription = fileName,
@@ -116,36 +121,30 @@ fun ZoomOverlay(
                                 sharedTransitionScope = sharedTransitionScope,
                                 animatedVisibilityScope = this@AnimatedVisibility,
                                 resizeMode = SharedTransitionScope.ResizeMode.ScaleToBounds(),
-                                restingShapeCornerRadius = 0.dp,   // Overlay is square
-                                targetShapeCornerRadius = 24.dp,   // Card corner radius
+                                restingShapeCornerRadius = 0.dp,
+                                targetShapeCornerRadius = 24.dp,
                                 renderInOverlayDuringTransition = true,
                                 keepChildrenSizePlacement = true
                             )
                             .offset { IntOffset(0, offsetY.roundToInt()) }
                             .graphicsLayer {
-                                // Fade out as user swipes down
                                 alpha = (1f - (offsetY / dismissThreshold).coerceIn(0f, 1f))
                             }
                             .pointerInput(isZoomedOut) {
-                                // Only allow swipe-to-dismiss when not zoomed in
                                 if (isZoomedOut) {
                                     detectDragGestures(
                                         onDrag = { _, dragAmount ->
-                                            // Only allow downward swipes
                                             if (dragAmount.y > 0) {
                                                 offsetY = (offsetY + dragAmount.y).coerceAtLeast(0f)
                                             }
                                         },
                                         onDragEnd = {
                                             if (offsetY >= dismissThreshold) {
-                                                // Dismiss if swiped far enough
                                                 onDismiss()
                                             }
-                                            // Reset offset
                                             offsetY = 0f
                                         },
                                         onDragCancel = {
-                                            // Reset offset if drag is cancelled
                                             offsetY = 0f
                                         }
                                     )
@@ -156,13 +155,10 @@ fun ZoomOverlay(
                                 onClick = { 
                                     val currentTime = System.currentTimeMillis()
                                     
-                                    // Check for double-tap when zoomed out
                                     if (isZoomedOut && (currentTime - lastTapTime) < doubleTapThreshold) {
-                                        // Double-tap detected while zoomed out → Close
                                         onDismiss()
                                         lastTapTime = 0L
                                     } else {
-                                        // Single tap → Update timestamp
                                         lastTapTime = currentTime
                                     }
                                 }

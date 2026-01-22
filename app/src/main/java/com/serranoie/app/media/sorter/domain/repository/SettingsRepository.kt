@@ -16,6 +16,8 @@ interface SettingsRepository {
     suspend fun setTutorialCompleted(completed: Boolean)
     
     suspend fun resetTutorial()
+    
+    suspend fun setAutoPlayVideos(enabled: Boolean)
 
     suspend fun resetSettings()
 }

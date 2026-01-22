@@ -56,6 +56,7 @@ data class FileInfo(
  * @param onExpandToggle Callback when the expand/collapse action is triggered
  * @param onOpenClick Callback when the open button is clicked
  * @param onShareClick Callback when the share button is clicked
+ * @param videoSlider Optional composable for video slider (shown above text for videos)
  * @param modifier Modifier to be applied to the overlay
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalSharedTransitionApi::class)
@@ -66,6 +67,7 @@ fun MediaInfoOverlay(
     onExpandToggle: () -> Unit,
     onOpenClick: () -> Unit,
     onShareClick: () -> Unit,
+    videoSlider: (@Composable () -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     SharedTransitionLayout(
@@ -86,6 +88,11 @@ fun MediaInfoOverlay(
                 .padding(24.dp),
             verticalArrangement = Arrangement.Bottom
         ) {
+            if (videoSlider != null && !isExpanded) {
+                videoSlider()
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+            
             Text(
                 text = fileInfo.fileName,
                 style = MaterialTheme.typography.titleLargeEmphasized,

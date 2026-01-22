@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.Brightness4
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Policy
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
@@ -28,9 +29,11 @@ fun SettingsScreen(
     appTheme: String,
     isMaterialYouEnabled: Boolean,
     isBlurredBackgroundEnabled: Boolean,
+    isAutoPlayEnabled: Boolean,
     onThemeChange: (String) -> Unit,
     onMaterialYouToggle: () -> Unit,
     onBlurredBackgroundToggle: () -> Unit,
+    onAutoPlayToggle: () -> Unit,
     onResetTutorial: () -> Unit = {},
     onBack: () -> Unit = {}
 ) {
@@ -160,12 +163,45 @@ fun SettingsScreen(
                 }
             }
 
-            // App Information Section
+            // Playback Section
+            item {
+                PaddedListGroup(
+                    title = "Playback"
+                ) {
+                    CustomPaddedListItem(
+                        onClick = onAutoPlayToggle,
+                        position = PaddedListItemPosition.Single
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PlayArrow,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Auto-Play Videos",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "Automatically play videos when reviewing",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = isAutoPlayEnabled,
+                            onCheckedChange = { onAutoPlayToggle() }
+                        )
+                    }
+                }
+            }
+
             item {
                 PaddedListGroup(
                     title = "App Information"
                 ) {
-                    // App Info
                     CustomPaddedListItem(
                         onClick = { /* TODO: Navigate to app info */ },
                         position = PaddedListItemPosition.First
@@ -190,7 +226,6 @@ fun SettingsScreen(
                         }
                     }
 
-                    // Website
                     CustomPaddedListItem(
                         onClick = { /* TODO: Open website */ },
                         position = PaddedListItemPosition.Middle
@@ -215,7 +250,6 @@ fun SettingsScreen(
                         }
                     }
 
-                    // Privacy Policy
                     CustomPaddedListItem(
                         onClick = { /* TODO: Open privacy policy */ },
                         position = PaddedListItemPosition.Middle
@@ -240,7 +274,6 @@ fun SettingsScreen(
                         }
                     }
 
-                    // Bug Reporter
                     CustomPaddedListItem(
                         onClick = { /* TODO: Open bug reporter */ },
                         position = PaddedListItemPosition.Middle
@@ -265,7 +298,6 @@ fun SettingsScreen(
                         }
                     }
 
-                    // Version
                     CustomPaddedListItem(
                         onClick = { /* No action - just display */ },
                         position = PaddedListItemPosition.Last
@@ -333,9 +365,11 @@ fun SettingsScreenPreview() {
             appTheme = "System",
             isMaterialYouEnabled = true,
             isBlurredBackgroundEnabled = true,
+            isAutoPlayEnabled = true,
             onThemeChange = {},
             onMaterialYouToggle = {},
             onBlurredBackgroundToggle = {},
+            onAutoPlayToggle = {},
             onResetTutorial = {},
             onBack = {}
         )

@@ -27,6 +27,10 @@ class UpdateSettingsUseCase @Inject constructor(
         repository.resetTutorial()
     }
     
+    suspend fun setAutoPlayVideos(enabled: Boolean) {
+        repository.setAutoPlayVideos(enabled)
+    }
+    
     suspend fun resetSettings() {
         repository.resetSettings()
     }

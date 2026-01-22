@@ -48,6 +48,7 @@ fun AppNavHost(
                 isCompleted = uiState.isCompleted,
                 deletedCount = uiState.deletedCount,
                 useBlurredBackground = appSettings.useBlurredBackground,
+                autoPlayVideos = appSettings.autoPlayVideos,
                 onKeepCurrent = { sorterViewModel.keepCurrent() },
                 onTrashCurrent = { sorterViewModel.trashCurrent() },
                 onUndoTrash = { sorterViewModel.undoTrash() },
@@ -93,6 +94,7 @@ fun AppNavHost(
                 },
                 isMaterialYouEnabled = appSettings.useDynamicColors,
                 isBlurredBackgroundEnabled = appSettings.useBlurredBackground,
+                isAutoPlayEnabled = appSettings.autoPlayVideos,
                 onThemeChange = { theme ->
                     val themeMode = when (theme) {
                         "Light" -> ThemeMode.LIGHT
@@ -103,6 +105,7 @@ fun AppNavHost(
                 },
                 onMaterialYouToggle = { settingsViewModel.toggleDynamicColors() },
                 onBlurredBackgroundToggle = { settingsViewModel.toggleBlurredBackground() },
+                onAutoPlayToggle = { settingsViewModel.toggleAutoPlayVideos() },
                 onResetTutorial = {
                     settingsViewModel.resetTutorial()
                     onNavigate(NavigationAction.NavigateTo(Screen.Onboard))

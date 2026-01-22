@@ -32,20 +32,24 @@ import com.serranoie.app.media.sorter.ui.theme.components.GestureIndicator
 import com.serranoie.app.media.sorter.ui.theme.components.MediaInfoOverlay
 import com.serranoie.app.media.sorter.ui.theme.components.MediaTypeBadge
 import com.serranoie.app.media.sorter.ui.theme.components.SorterTopAppBar
+import com.serranoie.app.media.sorter.ui.theme.components.VideoPlayer
 import com.serranoie.app.media.sorter.ui.theme.components.ZoomOverlay
 import com.serranoie.app.media.sorter.ui.theme.components.ZoomableMediaContent
 import com.serranoie.app.media.sorter.presentation.model.MediaFileUi
+import ir.mahozad.multiplatform.wavyslider.WaveDirection
+import ir.mahozad.multiplatform.wavyslider.material3.WavySlider as WavySlider3
 import com.serranoie.app.media.sorter.ui.theme.util.DevicePreview
 import com.serranoie.app.media.sorter.ui.theme.util.PreviewWrapper
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalSharedTransitionApi::class)
+@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun SorterMediaScreen(
     currentFile: MediaFileUi?,
     isCompleted: Boolean,
     deletedCount: Int,
     useBlurredBackground: Boolean,
+    autoPlayVideos: Boolean,
     onKeepCurrent: () -> Unit,
     onTrashCurrent: () -> MediaFileUi?,
     onUndoTrash: () -> Unit,
@@ -56,6 +60,10 @@ fun SorterMediaScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    
+    var videoProgress by remember { mutableStateOf(0f) }
+    var isVideoPlaying by remember { mutableStateOf(autoPlayVideos) }
+    var seekToProgress by remember { mutableStateOf<Float?>(null) }
     val colorScheme = MaterialTheme.colorScheme
     var keepProgress by remember { mutableFloatStateOf(0f) }
     var trashProgress by remember { mutableStateOf(0f) }
@@ -66,6 +74,9 @@ fun SorterMediaScreen(
     LaunchedEffect(currentFile?.id) {
         isInfoExpanded = false
         isZoomed = false
+        videoProgress = 0f
+        isVideoPlaying = autoPlayVideos
+        seekToProgress = null
     }
 
     val keepIconAlpha = animateFloatAsState(keepProgress, animationSpec = tween(240)).value
@@ -214,21 +225,41 @@ fun SorterMediaScreen(
 			                        ) {
 				                        MediaTypeBadge(
 					                        mediaType = currentFile.mediaType,
+					                        fileName = currentFile.fileName,
 					                        modifier = Modifier
 						                        .zIndex(1f)
 						                        .align(Alignment.TopStart)
 						                        .padding(12.dp)
 				                        )
 
-				                        ZoomableMediaContent(
-					                        uri = currentFile.uri,
-					                        fileName = currentFile.fileName,
-					                        mediaType = currentFile.mediaType,
-					                        sharedTransitionScope = this@SharedTransitionLayout,
-					                        animatedVisibilityScope = this@AnimatedVisibility,
-					                        isVisible = !isZoomed,
-					                        modifier = Modifier.fillMaxSize()
-				                        )
+				                        if (currentFile.mediaType == "video") {
+					                        VideoPlayer(
+						                        uri = currentFile.uri,
+						                        autoPlay = autoPlayVideos,
+						                        seekToProgress = seekToProgress,
+						                        onProgressChanged = { progress ->
+							                        videoProgress = progress
+							                        seekToProgress = null
+						                        },
+						                        onPlayingChanged = { playing ->
+							                        isVideoPlaying = playing
+						                        },
+						                        sharedTransitionScope = this@SharedTransitionLayout,
+						                        animatedVisibilityScope = this@AnimatedVisibility,
+						                        isVisible = !isZoomed,
+						                        modifier = Modifier.fillMaxSize()
+					                        )
+				                        } else {
+					                        ZoomableMediaContent(
+						                        uri = currentFile.uri,
+						                        fileName = currentFile.fileName,
+						                        mediaType = currentFile.mediaType,
+						                        sharedTransitionScope = this@SharedTransitionLayout,
+						                        animatedVisibilityScope = this@AnimatedVisibility,
+						                        isVisible = !isZoomed,
+						                        modifier = Modifier.fillMaxSize()
+					                        )
+				                        }
 
 				                        MediaInfoOverlay(
 					                        fileInfo = FileInfo(
@@ -292,6 +323,28 @@ fun SorterMediaScreen(
 							                        }
 						                        }
 					                        },
+					                        videoSlider = if (currentFile.mediaType == "video") {
+						                        {
+							                        WavySlider3(
+								                        value = videoProgress,
+								                        onValueChange = { newProgress ->
+									                        seekToProgress = newProgress
+								                        },
+								                        enabled = true,
+								                        waveLength = 16.dp,
+								                        waveHeight = if (isVideoPlaying) 8.dp else 4.dp,
+								                        waveVelocity = if (isVideoPlaying) 15.dp to WaveDirection.HEAD else 0.dp to WaveDirection.HEAD,
+								                        waveThickness = 3.dp,
+								                        trackThickness = 3.dp,
+								                        colors = androidx.compose.material3.SliderDefaults.colors(
+									                        thumbColor = MaterialTheme.colorScheme.primary,
+									                        activeTrackColor = MaterialTheme.colorScheme.primary,
+									                        inactiveTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+								                        ),
+								                        modifier = Modifier.fillMaxWidth()
+							                        )
+						                        }
+					                        } else null,
 					                        modifier = Modifier
 						                        .align(Alignment.BottomStart)
 						                        .zIndex(2f)
@@ -343,6 +396,7 @@ fun SorterMediaScreen(
 	                        ZoomOverlay(
 		                        uri = currentFile.uri,
 		                        fileName = currentFile.fileName,
+		                        mediaType = currentFile.mediaType,
 		                        sharedTransitionScope = this@SharedTransitionLayout,
 		                        animatedVisibilityScope = this@AnimatedVisibility,
 		                        isVisible = isZoomed,
@@ -380,6 +434,7 @@ fun SorterMediaScreenPreview() {
             isCompleted = false,
             deletedCount = 3,
             useBlurredBackground = true,
+            autoPlayVideos = true,
             onKeepCurrent = {},
             onTrashCurrent = { null },
             onUndoTrash = {},

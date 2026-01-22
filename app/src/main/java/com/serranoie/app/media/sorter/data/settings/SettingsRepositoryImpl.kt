@@ -30,6 +30,10 @@ class SettingsRepositoryImpl @Inject constructor(
         settingsDataStore.resetTutorial()
     }
     
+    override suspend fun setAutoPlayVideos(enabled: Boolean) {
+        settingsDataStore.setAutoPlayVideos(enabled)
+    }
+    
     override suspend fun resetSettings() {
         settingsDataStore.clearSettings()
     }
