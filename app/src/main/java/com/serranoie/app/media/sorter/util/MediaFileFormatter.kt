@@ -52,4 +52,9 @@ class MediaFileFormatter @Inject constructor() {
         val dateStr = formatRelativeDate(date)
         return "$sizeStr • $dateStr"
     }
+    
+    fun formatFileInfoWithPath(fileSizeBytes: Long, path: String): String {
+        val sizeStr = formatFileSize(fileSizeBytes)
+        return "$sizeStr • $path"
+    }
 }

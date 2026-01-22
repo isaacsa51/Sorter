@@ -1,9 +1,12 @@
 package com.serranoie.app.media.sorter.data.datasource
 
+import android.app.RecoverableSecurityException
 import android.content.ContentUris
 import android.content.Context
+import android.content.IntentSender
 import android.database.Cursor
 import android.net.Uri
+import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
 import com.serranoie.app.media.sorter.data.MediaFile
@@ -97,6 +100,87 @@ class AndroidMediaDataSource @Inject constructor(
     override suspend fun fetchMediaByUri(uri: Uri): Result<MediaFile> = withContext(Dispatchers.IO) {
         // TODO: Implement if needed for future features
         AppError.UnknownError(message = "Not implemented").asError()
+    }
+    
+    override suspend fun deleteMedia(uri: Uri): Result<Boolean> = withContext(Dispatchers.IO) {
+        try {
+            val deletedRows = context.contentResolver.delete(uri, null, null)
+            if (deletedRows > 0) {
+                Log.d(TAG, "Successfully deleted media: $uri")
+                true.asSuccess()
+            } else {
+                Log.w(TAG, "Failed to delete media: $uri")
+                AppError.UnknownError(message = "Failed to delete file").asError()
+            }
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Permission denied to delete media", e)
+            AppError.PermissionError().asError()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error deleting media", e)
+            AppError.UnknownError(message = "Error deleting file: ${e.message}", cause = e).asError()
+        }
+    }
+    
+    override suspend fun deleteMultipleMedia(uris: List<Uri>): Result<Int> = withContext(Dispatchers.IO) {
+        try {
+            var successCount = 0
+            var failureCount = 0
+            val pendingUris = mutableListOf<Uri>()
+            
+            uris.forEach { uri ->
+                try {
+                    val deletedRows = context.contentResolver.delete(uri, null, null)
+                    if (deletedRows > 0) {
+                        successCount++
+                    } else {
+                        failureCount++
+                    }
+                } catch (e: RecoverableSecurityException) {
+                    // On Android 10+, we need user permission for files we didn't create
+                    Log.w(TAG, "RecoverableSecurityException for $uri, needs user permission")
+                    pendingUris.add(uri)
+                    failureCount++
+                } catch (e: SecurityException) {
+                    Log.e(TAG, "SecurityException for $uri", e)
+                    failureCount++
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to delete $uri", e)
+                    failureCount++
+                }
+            }
+            
+            Log.d(TAG, "Deleted $successCount of ${uris.size} media files ($failureCount failed, ${pendingUris.size} need permission)")
+            
+            // If all failures are RecoverableSecurityException, we can request permission
+            if (successCount == 0 && pendingUris.size == uris.size) {
+                Log.d(TAG, "All files need user permission, returning error to trigger permission request")
+                AppError.PermissionError().asError()
+            } else {
+                successCount.asSuccess()
+            }
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Permission denied to delete media", e)
+            AppError.PermissionError().asError()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error deleting multiple media", e)
+            AppError.UnknownError(message = "Error deleting files: ${e.message}", cause = e).asError()
+        }
+    }
+    
+    override fun createDeleteRequest(uris: List<Uri>): android.app.PendingIntent? {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // Android 11+ (API 30)
+            Log.d(TAG, "Creating delete request for ${uris.size} files (Android 11+)")
+            MediaStore.createDeleteRequest(context.contentResolver, uris)
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // Android 10 (API 29)
+            Log.d(TAG, "Creating delete request for ${uris.size} files (Android 10)")
+            MediaStore.createDeleteRequest(context.contentResolver, uris)
+        } else {
+            // Android 9 and below - no special permission needed
+            Log.d(TAG, "No delete request needed for Android < 10")
+            null
+        }
     }
 
     private fun fetchMediaGeneric(

@@ -1,7 +1,10 @@
 package com.serranoie.app.media.sorter.presentation.review
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
@@ -33,7 +36,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -44,7 +46,6 @@ import com.serranoie.app.media.sorter.presentation.model.MediaFileUi
 import com.serranoie.app.media.sorter.ui.theme.components.PinchToZoomGridContainer
 import com.serranoie.app.media.sorter.ui.theme.components.GridZoomLevel
 import com.serranoie.app.media.sorter.ui.theme.components.detectPinchGestures
-import com.serranoie.app.media.sorter.ui.theme.SorterTheme
 import com.serranoie.app.media.sorter.ui.theme.util.DevicePreview
 import com.serranoie.app.media.sorter.ui.theme.util.PreviewWrapper
 import kotlinx.coroutines.delay
@@ -57,10 +58,23 @@ fun ReviewScreen(
 	onBack: () -> Unit = {},
 	onSettings: () -> Unit = {},
 	onInfo: () -> Unit = {},
-	onRemoveItem: (MediaFileUi) -> Unit = {}
+	onRemoveItem: (MediaFileUi) -> Unit = {},
+	onDeleteAll: () -> Unit = {}
 ) {
-	val colorScheme = MaterialTheme.colorScheme
-
+	var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+	
+	// Setup delete media handler for Android 10+
+	val (deleteHandler, _) = rememberDeleteMediaHandler(
+		onPermissionGranted = {
+			// Permission granted, proceed with deletion
+			onDeleteAll()
+		},
+		onPermissionDenied = {
+			// User denied permission
+			// Could show a message here
+		}
+	)
+	
 	// Define zoom levels: 1 column, 2 columns, 3 columns, 4 columns
 	val zoomLevels = remember {
 		listOf(
@@ -79,7 +93,30 @@ fun ReviewScreen(
 				onSettings = onSettings,
 				onInfo = onInfo
 			)
-		}) { paddingValues ->
+		},
+		floatingActionButton = {
+			if (deletedFiles.isNotEmpty()) {
+				ExtendedFloatingActionButton(
+					onClick = { showDeleteConfirmDialog = true },
+					icon = {
+						Icon(
+							imageVector = Icons.Default.Delete,
+							contentDescription = "Delete all"
+						)
+					},
+					text = {
+						Text(
+							text = "Delete All (${deletedFiles.size})",
+							style = MaterialTheme.typography.labelLarge,
+							fontWeight = FontWeight.SemiBold
+						)
+					},
+					containerColor = MaterialTheme.colorScheme.errorContainer,
+					contentColor = MaterialTheme.colorScheme.error
+				)
+			}
+		}
+	) { paddingValues ->
 		Box(
 			modifier = Modifier
 				.fillMaxSize()
@@ -100,9 +137,23 @@ fun ReviewScreen(
 					)
 				}
 
-				// Floating hint for pinch gesture
 				ZoomHint(
 					itemCount = deletedFiles.size, modifier = Modifier.align(Alignment.BottomCenter)
+				)
+			}
+			
+			if (showDeleteConfirmDialog) {
+				DeleteAllConfirmationDialog(
+					itemCount = deletedFiles.size,
+					onConfirm = {
+						showDeleteConfirmDialog = false
+						// Request permission first on Android 10+
+						val uris = deletedFiles.mapNotNull { it.uri }
+						deleteHandler.requestDeletePermission(uris)
+					},
+					onDismiss = {
+						showDeleteConfirmDialog = false
+					}
 				)
 			}
 		}
@@ -272,12 +323,11 @@ private fun SwipeableMediaGridItem(
 	columnCount: Int,
 	onRemove: () -> Unit
 ) {
-	var offsetX by remember { mutableFloatStateOf(0f) }
+	val offsetX = remember { Animatable(0f) }
 	var isRemoving by remember { mutableStateOf(false) }
 	val scope = rememberCoroutineScope()
-	val swipeThreshold = -200f // Swipe left threshold in pixels
+	val swipeThreshold = -200f
 	
-	// Animate removal
 	AnimatedVisibility(
 		visible = !isRemoving,
 		exit = fadeOut(animationSpec = tween(300)) + 
@@ -286,7 +336,6 @@ private fun SwipeableMediaGridItem(
 		Box(
 			modifier = Modifier.fillMaxWidth()
 		) {
-			// Delete background revealed when swiping
 			Box(
 				modifier = Modifier
 					.matchParentSize()
@@ -308,44 +357,50 @@ private fun SwipeableMediaGridItem(
 						tint = MaterialTheme.colorScheme.error,
 						modifier = Modifier.size(32.dp)
 					)
-					Spacer(modifier = Modifier.width(8.dp))
-					Text(
-						text = "Remove",
-						style = MaterialTheme.typography.titleMedium,
-						fontWeight = FontWeight.Bold,
-						color = MaterialTheme.colorScheme.error
-					)
 				}
 			}
 			
-			// Swipeable content
 			Box(
 				modifier = Modifier
-					.offset { IntOffset(offsetX.roundToInt(), 0) }
+					.offset { IntOffset(offsetX.value.roundToInt(), 0) }
 					.pointerInput(Unit) {
 						detectHorizontalDragGestures(
 							onDragEnd = {
-								if (offsetX < swipeThreshold) {
-									// Swipe threshold exceeded - remove item
+								if (offsetX.value < swipeThreshold) {
 									scope.launch {
 										isRemoving = true
-										delay(300) // Wait for animation
+										delay(300)
 										onRemove()
 									}
 								} else {
-									// Snap back
-									offsetX = 0f
+									scope.launch {
+										offsetX.animateTo(
+											targetValue = 0f,
+											animationSpec = spring(
+												dampingRatio = Spring.DampingRatioMediumBouncy,
+												stiffness = Spring.StiffnessMedium
+											)
+										)
+									}
 								}
 							},
 							onDragCancel = {
-								// Snap back
-								offsetX = 0f
+								scope.launch {
+									offsetX.animateTo(
+										targetValue = 0f,
+										animationSpec = spring(
+											dampingRatio = Spring.DampingRatioMediumBouncy,
+											stiffness = Spring.StiffnessMedium
+										)
+									)
+								}
 							},
 							onHorizontalDrag = { _, dragAmount ->
-								// Only allow left swipe
-								val newOffset = offsetX + dragAmount
+								val newOffset = offsetX.value + dragAmount
 								if (newOffset <= 0) {
-									offsetX = newOffset
+									scope.launch {
+										offsetX.snapTo(newOffset)
+									}
 								}
 							}
 						)
@@ -366,7 +421,6 @@ private fun MediaGridItem(
 ) {
 	val colorScheme = MaterialTheme.colorScheme
 
-	// Adjust height based on column count for variety in staggered grid
 	val heightMultiplier = when (file.id.hashCode() % 3) {
 		0 -> 1.2f
 		1 -> 1.0f
@@ -394,16 +448,13 @@ private fun MediaGridItem(
 		)
 	) {
 		Box(modifier = Modifier.fillMaxSize()) {
-			// Media preview
 			if (file.uri != null) {
 				val context = LocalContext.current
 
-				// Build image request - Coil will handle video frames automatically with coil-video
 				val imageRequest = remember(file.uri) {
 					ImageRequest.Builder(context).data(file.uri).crossfade(true).build()
 				}
 
-				// Real media thumbnail
 				AsyncImage(
 					model = imageRequest,
 					contentDescription = file.fileName,
@@ -411,7 +462,6 @@ private fun MediaGridItem(
 					contentScale = ContentScale.Crop
 				)
 			} else {
-				// Mock placeholder for sample data
 				Box(
 					modifier = Modifier
 						.fillMaxSize()
@@ -444,7 +494,6 @@ private fun MediaGridItem(
 				}
 			}
 
-			// File type badge
 			Surface(
 				modifier = Modifier
 					.align(Alignment.TopEnd)
@@ -466,7 +515,6 @@ private fun MediaGridItem(
 				)
 			}
 
-			// File name overlay at bottom (only visible for larger items)
 			if (columnCount <= 2) {
 				Box(
 					modifier = Modifier
@@ -489,6 +537,64 @@ private fun MediaGridItem(
 			}
 		}
 	}
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun DeleteAllConfirmationDialog(
+	itemCount: Int,
+	onConfirm: () -> Unit,
+	onDismiss: () -> Unit
+) {
+	AlertDialog(
+		onDismissRequest = onDismiss,
+		icon = {
+			Icon(
+				imageVector = Icons.Default.Delete,
+				contentDescription = null,
+				tint = MaterialTheme.colorScheme.error,
+				modifier = Modifier.size(32.dp)
+			)
+		},
+		title = {
+			Text(
+				text = "Delete All Files?",
+				style = MaterialTheme.typography.titleLargeEmphasized,
+				textAlign = TextAlign.Center
+			)
+		},
+		text = {
+			Text(
+				text = "Are you sure you want to permanently delete all $itemCount file${if (itemCount != 1) "s" else ""}? This action cannot be undone.",
+				style = MaterialTheme.typography.bodyLarge,
+				textAlign = TextAlign.Center,
+				color = MaterialTheme.colorScheme.onSurfaceVariant
+			)
+		},
+		confirmButton = {
+			Button(
+				onClick = onConfirm,
+				colors = ButtonDefaults.buttonColors(
+					containerColor = MaterialTheme.colorScheme.error,
+					contentColor = MaterialTheme.colorScheme.onError
+				)
+			) {
+				Text(
+					text = "Delete All",
+					style = MaterialTheme.typography.labelLargeEmphasized,
+					fontWeight = FontWeight.Bold
+				)
+			}
+		},
+		dismissButton = {
+			TextButton(onClick = onDismiss) {
+				Text(
+					text = "Cancel",
+					style = MaterialTheme.typography.labelLargeEmphasized
+				)
+			}
+		}
+	)
 }
 
 @DevicePreview
@@ -534,6 +640,6 @@ fun ReviewScreenPreview() {
 				modified = "3 days ago",
 				path = "/photos/nature/mountains/"
 			)
-		), onBack = {}, onSettings = {}, onInfo = {}, onRemoveItem = {})
+		), onBack = {}, onSettings = {}, onInfo = {}, onRemoveItem = {}, onDeleteAll = {})
 	}
 }

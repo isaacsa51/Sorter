@@ -14,7 +14,7 @@ class MediaFileMapper @Inject constructor(
         val dateStr = formatter.formatRelativeDate(mediaFile.fileDate)
         val dateCreatedStr = formatter.formatDateTime(mediaFile.dateTaken)
         val lastAccessedStr = formatter.formatDateTime(System.currentTimeMillis())
-        val fileInfoStr = formatter.formatFileInfo(mediaFile.fileSize, mediaFile.fileDate)
+        val fileInfoStr = formatter.formatFileInfoWithPath(mediaFile.fileSize, mediaFile.folderName)
         
         return MediaFileUi(
             id = id,

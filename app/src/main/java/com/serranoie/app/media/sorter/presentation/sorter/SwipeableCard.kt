@@ -1,8 +1,10 @@
 package com.serranoie.app.media.sorter.presentation.sorter
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
@@ -19,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
@@ -31,7 +34,6 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.serranoie.app.media.sorter.R
 import kotlinx.coroutines.launch
-import kotlin.math.abs
 import kotlin.math.roundToInt
 
 @Composable
@@ -44,9 +46,20 @@ fun SwipeableCard(
     cardContent: @Composable () -> Unit
 ) {
     val offsetY = remember { Animatable(0f) }
+    val alpha = remember { Animatable(0f) }
+    val entranceScale = remember { Animatable(0.5f) }
     val scope = rememberCoroutineScope()
     val haptic = LocalHapticFeedback.current
     var lastVibeProgress by remember { mutableStateOf(0f) }
+    
+    LaunchedEffect(Unit) {
+        launch {
+            alpha.animateTo(1f, animationSpec = tween(300, easing = EaseOut))
+        }
+        launch {
+            entranceScale.animateTo(1f, animationSpec = tween(300, easing = EaseOut))
+        }
+    }
 
     val keepProgress by remember {
         derivedStateOf { if (offsetY.value > 0) (offsetY.value / 180f).coerceIn(0f, 1f) else 0f }
@@ -58,22 +71,29 @@ fun SwipeableCard(
     LaunchedEffect(keepProgress) { onKeepGestureProgress(keepProgress) }
     LaunchedEffect(trashProgress) { onTrashGestureProgress(trashProgress) }
 
-    val cardScale by remember {
+    val gestureScale by remember {
         derivedStateOf {
             when {
-                offsetY.value < 0 -> 1 - (abs(offsetY.value) / 1200f)
+                offsetY.value < 0 -> (1f - (trashProgress * 0.08f)).coerceAtLeast(0.92f)
                 offsetY.value > 0 -> 1f + (keepProgress * 0.05f)
                 else -> 1f
             }
         }
     }
+    
+    // Combine entrance scale with gesture scale
+    val cardScale by remember {
+        derivedStateOf {
+            entranceScale.value * gestureScale
+        }
+    }
 
     val cardPaddingValue by remember {
         derivedStateOf {
-            if (offsetY.value > 0) {
-                8f * (1f - keepProgress * 0.8f)
-            } else {
-                8f
+            when {
+                offsetY.value > 0 -> 8f * (1f - keepProgress * 0.8f)
+                offsetY.value < 0 -> 8f + (trashProgress * 8f)
+                else -> 8f
             }
         }
     }
@@ -94,6 +114,7 @@ fun SwipeableCard(
             modifier = Modifier
                 .padding(cardPaddingValue.dp)
                 .fillMaxSize()
+                .graphicsLayer { this.alpha = alpha.value }
                 .offset { IntOffset(0, offsetY.value.roundToInt()) }
                 .scale(cardScale)
                 .pointerInput(Unit) {
@@ -119,18 +140,55 @@ fun SwipeableCard(
                             when {
                                 offsetY.value < -180 -> {
                                     scope.launch {
-                                        offsetY.animateTo(-1200f, spring(stiffness = Spring.StiffnessMedium))
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        kotlinx.coroutines.joinAll(
+                                            launch {
+                                                offsetY.animateTo(-1200f, spring(stiffness = Spring.StiffnessMedium))
+                                            },
+                                            launch {
+                                                alpha.animateTo(0f, spring(stiffness = Spring.StiffnessMedium))
+                                            }
+                                        )
+                                        // Call the callback only after animations complete
                                         onTrash()
+                                        // Reset all animated values for next card
                                         offsetY.snapTo(0f)
+                                        alpha.snapTo(0f)
+                                        entranceScale.snapTo(0.5f)
+                                        // Animate in the next card
+                                        launch {
+                                            alpha.animateTo(1f, animationSpec = tween(300, easing = EaseOut))
+                                        }
+                                        launch {
+                                            entranceScale.animateTo(1f, animationSpec = tween(300, easing = EaseOut))
+                                        }
                                     }
                                 }
                                 offsetY.value > 180 -> {
                                     scope.launch {
-                                        offsetY.animateTo(1200f, spring(stiffness = Spring.StiffnessMedium))
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        // Run animations in parallel and wait for both to complete
+                                        kotlinx.coroutines.joinAll(
+                                            launch {
+                                                offsetY.animateTo(1200f, spring(stiffness = Spring.StiffnessMedium))
+                                            },
+                                            launch {
+                                                alpha.animateTo(0f, spring(stiffness = Spring.StiffnessMedium))
+                                            }
+                                        )
+                                        // Call the callback only after animations complete
                                         onKeep()
+                                        // Reset all animated values for next card
                                         offsetY.snapTo(0f)
+                                        alpha.snapTo(0f)
+                                        entranceScale.snapTo(0.5f)
+                                        // Animate in the next card
+                                        launch {
+                                            alpha.animateTo(1f, animationSpec = tween(300, easing = EaseOut))
+                                        }
+                                        launch {
+                                            entranceScale.animateTo(1f, animationSpec = tween(300, easing = EaseOut))
+                                        }
                                     }
                                 }
                                 else -> scope.launch {

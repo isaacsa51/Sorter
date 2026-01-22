@@ -2,6 +2,7 @@ package com.serranoie.app.media.sorter
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -11,8 +12,10 @@ import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.serranoie.app.media.sorter.data.settings.ThemeMode
 import com.serranoie.app.media.sorter.presentation.navigation.AppNavHost
+import com.serranoie.app.media.sorter.presentation.navigation.NavigationAction
 import com.serranoie.app.media.sorter.presentation.navigation.NavigationViewModel
 import com.serranoie.app.media.sorter.presentation.navigation.PermissionHandler
+import com.serranoie.app.media.sorter.presentation.navigation.Screen
 import com.serranoie.app.media.sorter.presentation.settings.SettingsViewModel
 import com.serranoie.app.media.sorter.presentation.sorter.SorterViewModel
 import com.serranoie.app.media.sorter.ui.theme.SorterTheme
@@ -62,16 +65,13 @@ fun SorterApp() {
  */
 @Composable
 fun SorterAppContent() {
-    // Get ViewModels
     val navigationViewModel: NavigationViewModel = hiltViewModel()
     val settingsViewModel: SettingsViewModel = hiltViewModel()
     val sorterViewModel: SorterViewModel = hiltViewModel()
     
-    // Collect state
     val navigationState by navigationViewModel.navigationState.collectAsState()
     val appSettings by settingsViewModel.appSettings.collectAsState()
     
-    // Permission handler - returns a function to request permissions
     val requestPermissions = PermissionHandler(
         hasPermissions = navigationState.hasPermissions,
         showPermissionDialog = navigationState.showPermissionDialog,
@@ -87,7 +87,10 @@ fun SorterAppContent() {
         }
     )
     
-    // Navigation host
+    BackHandler(enabled = navigationState.currentScreen != Screen.Onboard) {
+        navigationViewModel.handleAction(NavigationAction.NavigateBack)
+    }
+    
     AppNavHost(
         currentScreen = navigationState.currentScreen,
         appSettings = appSettings,

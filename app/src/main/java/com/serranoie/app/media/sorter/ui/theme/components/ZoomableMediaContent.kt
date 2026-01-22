@@ -5,7 +5,6 @@ import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
-
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -13,15 +12,23 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 
 /**
- * Static media content (non-zoomable) - displays image in card
- * No gesture detection here - all handled by parent
+ * Static media content displayed in the card with shared element transition support.
+ * Uses sharedBoundsRevealWithShapeMorph for smooth animated transitions.
+ * 
+ * @param uri The URI of the media to display
+ * @param fileName The name of the file (for content description)
+ * @param mediaType The type of media ("image" or "video")
+ * @param sharedTransitionScope The scope managing shared transitions
+ * @param animatedVisibilityScope The scope for animated visibility
+ * @param isVisible Whether this view is currently visible (controls transition)
+ * @param modifier Additional modifiers
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -45,16 +52,28 @@ fun ZoomableMediaContent(
                     .build()
             }
 
-            // Static image - no gesture detection (handled by parent Box)
+            // Create shared element key based on URI
+            val sharedElementKey = ImageElementKey(uri)
+
+            // Static image with shared element transition
             SubcomposeAsyncImage(
                 model = imageRequest,
                 contentDescription = fileName,
                 modifier = modifier
                     .then(
                         if (isVisible) {
-                            Modifier.sharedElement(
-                                rememberSharedContentState(key = "media-${uri}"),
-                                animatedVisibilityScope = animatedVisibilityScope
+                            // Apply shared bounds transition with shape morphing
+                            // - Card has 24dp rounded corners (restingShapeCornerRadius)
+                            // - Transitions to 0dp square corners when zooming (targetShapeCornerRadius)
+                            Modifier.sharedBoundsRevealWithShapeMorph(
+                                sharedContentState = rememberSharedContentState(key = sharedElementKey),
+                                sharedTransitionScope = sharedTransitionScope,
+                                animatedVisibilityScope = animatedVisibilityScope,
+                                resizeMode = SharedTransitionScope.ResizeMode.ScaleToBounds(),
+                                restingShapeCornerRadius = 24.dp, // Card corner radius
+                                targetShapeCornerRadius = 0.dp,   // Zoom overlay (square)
+                                renderInOverlayDuringTransition = true,
+                                keepChildrenSizePlacement = true
                             )
                         } else Modifier
                     ),

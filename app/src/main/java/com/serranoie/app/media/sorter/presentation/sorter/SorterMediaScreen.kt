@@ -1,5 +1,6 @@
 package com.serranoie.app.media.sorter.presentation.sorter
 
+import android.content.Intent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -9,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -20,6 +22,8 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.zIndex
+import com.serranoie.app.media.sorter.ui.theme.components.ActionFeedbackTint
+import com.serranoie.app.media.sorter.ui.theme.components.ActionType
 import com.serranoie.app.media.sorter.ui.theme.components.BlurredMediaBackground
 import com.serranoie.app.media.sorter.ui.theme.components.CompletionScreen
 import com.serranoie.app.media.sorter.ui.theme.components.FileInfo
@@ -43,7 +47,7 @@ fun SorterMediaScreen(
     deletedCount: Int,
     useBlurredBackground: Boolean,
     onKeepCurrent: () -> Unit,
-    onTrashCurrent: () -> MediaFileUi?, // Now returns the trashed file
+    onTrashCurrent: () -> MediaFileUi?,
     onUndoTrash: () -> Unit,
     onToggleBackground: () -> Unit,
     onBackToOnboarding: () -> Unit = {},
@@ -51,32 +55,25 @@ fun SorterMediaScreen(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     val colorScheme = MaterialTheme.colorScheme
-
-    // Gesture progress states for animated icons
-    var keepProgress by remember { mutableStateOf(0f) }
+    var keepProgress by remember { mutableFloatStateOf(0f) }
     var trashProgress by remember { mutableStateOf(0f) }
-
-    // State for expandable info panel
     var isInfoExpanded by remember { mutableStateOf(false) }
-    
-    // State for zoom mode (shows overlay when true)
     var isZoomed by remember { mutableStateOf(false) }
+    var actionFeedback by remember { mutableStateOf<ActionType?>(null) }
 
-    // Reset expanded state when file changes
     LaunchedEffect(currentFile?.id) {
         isInfoExpanded = false
         isZoomed = false
     }
 
-    // Animated values for keep icon (bottom, green)
     val keepIconAlpha = animateFloatAsState(keepProgress, animationSpec = tween(240)).value
     val keepIconScale =
         animateFloatAsState(0.7f + 0.5f * keepProgress, animationSpec = tween(240)).value
     val keepIconOffset =
         animateFloatAsState((-32f + 60f * keepProgress), animationSpec = tween(240)).value
 
-    // Animated values for trash icon (top, red)
     val trashIconAlpha = animateFloatAsState(trashProgress, animationSpec = tween(240)).value
     val trashIconScale =
         animateFloatAsState(0.7f + 0.5f * trashProgress, animationSpec = tween(240)).value
@@ -93,15 +90,22 @@ fun SorterMediaScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                // Blurred media background or solid color
 	            BlurredMediaBackground(
 		            uri = currentFile?.uri,
 		            mediaType = currentFile?.mediaType ?: "image",
 		            enabled = useBlurredBackground && currentFile != null && !isCompleted,
 		            modifier = Modifier.fillMaxSize()
 	            )
+	            
+	            ActionFeedbackTint(
+		            actionType = actionFeedback,
+		            onAnimationComplete = { actionFeedback = null },
+		            modifier = Modifier
+			            .fillMaxSize()
+			            .zIndex(0.5f)
+	            )
+	            
                 if (isCompleted || currentFile == null) {
-                    // Completion screen
 	                CompletionScreen(
 		                deletedCount = deletedCount,
 		                onReviewDeleted = onNavigateToReview,
@@ -133,7 +137,7 @@ fun SorterMediaScreen(
 	                        GestureIndicator(
 		                        visible = trashIconAlpha > 0.01f,
 		                        icon = Icons.Default.Delete,
-		                        text = "Release to delete",
+		                        text = "Delete",
 		                        containerColor = colorScheme.errorContainer,
 		                        contentColor = colorScheme.error,
 		                        alpha = trashIconAlpha,
@@ -141,7 +145,6 @@ fun SorterMediaScreen(
 	                        )
                         }
 
-                        // Main swipeable card content
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -149,30 +152,30 @@ fun SorterMediaScreen(
                             contentAlignment = Alignment.Center
                         ) {
 	                        SwipeableCard(
-		                        //fileName = currentFile.fileName,
-		                        //fileInfo = currentFile.fileInfo,
 		                        modifier = Modifier.fillMaxSize(),
-		                        onKeep = onKeepCurrent,
+		                        onKeep = {
+			                        actionFeedback = ActionType.Keep
+			                        onKeepCurrent()
+		                        },
 		                        onTrash = {
+			                        actionFeedback = ActionType.Trash
 			                        val trashedFile = onTrashCurrent()
 			                        
-			                        // Show snackbar with undo action (2 second duration)
 			                        trashedFile?.let { file ->
 				                        scope.launch {
-					                        // Use custom 2-second timeout with manual dismissal
 					                        val snackbarJob = launch {
 						                        kotlinx.coroutines.delay(2000)
 						                        snackbarHostState.currentSnackbarData?.dismiss()
 					                        }
 					                        
 					                        val result = snackbarHostState.showSnackbar(
-						                        message = "${file.fileName} moved to trash",
+						                        message = "Media moved to trash",
 						                        actionLabel = "UNDO",
 						                        duration = SnackbarDuration.Indefinite,
 						                        withDismissAction = false
 					                        )
 					                        
-					                        snackbarJob.cancel() // Cancel auto-dismiss if action performed
+					                        snackbarJob.cancel()
 					                        
 					                        if (result == SnackbarResult.ActionPerformed) {
 						                        onUndoTrash()
@@ -187,36 +190,28 @@ fun SorterMediaScreen(
 				                        modifier = Modifier
 					                        .fillMaxSize()
 					                        .pointerInput(Unit) {
-						                        // Only detect multi-finger pinch gestures
 						                        awaitEachGesture {
 							                        awaitFirstDown(requireUnconsumed = false)
 
 							                        do {
 								                        val event = awaitPointerEvent()
 
-								                        // Only process if 2 or more fingers
 								                        if (event.changes.size >= 2) {
 									                        val zoom = event.calculateZoom()
 
-									                        // Pinch out to open zoom
 									                        if (zoom > 1.0f && !isZoomed) {
 										                        isZoomed = true
-										                        // Consume the event so it doesn't go to card
 										                        event.changes.forEach { it.consume() }
 									                        }
-									                        // Pinch in to close zoom
 									                        else if (zoom < 1.0f && isZoomed) {
 										                        isZoomed = false
 										                        event.changes.forEach { it.consume() }
 									                        }
 								                        }
-								                        // Single finger: don't consume, let it pass to Card
-
 							                        } while (event.changes.any { it.pressed })
 						                        }
 					                        }
 			                        ) {
-				                        // Media type badge at top-right
 				                        MediaTypeBadge(
 					                        mediaType = currentFile.mediaType,
 					                        modifier = Modifier
@@ -225,7 +220,6 @@ fun SorterMediaScreen(
 						                        .padding(12.dp)
 				                        )
 
-				                        // Static (non-zoomable) media content in card
 				                        ZoomableMediaContent(
 					                        uri = currentFile.uri,
 					                        fileName = currentFile.fileName,
@@ -236,7 +230,6 @@ fun SorterMediaScreen(
 					                        modifier = Modifier.fillMaxSize()
 				                        )
 
-				                        // Bottom overlay with info and actions
 				                        MediaInfoOverlay(
 					                        fileInfo = FileInfo(
 						                        fileName = currentFile.fileName,
@@ -250,8 +243,57 @@ fun SorterMediaScreen(
 					                        ),
 					                        isExpanded = isInfoExpanded,
 					                        onExpandToggle = { isInfoExpanded = !isInfoExpanded },
-					                        onOpenClick = { /* Open action */ },
-					                        onShareClick = { /* Share action */ },
+					                        onOpenClick = {
+						                        currentFile.uri?.let { uri ->
+							                        try {
+								                        val intent = Intent(Intent.ACTION_VIEW).apply {
+									                        setDataAndType(uri, currentFile.mediaType.let {
+										                        when (it) {
+											                        "video" -> "video/*"
+											                        else -> "image/*"
+										                        }
+									                        })
+									                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+								                        }
+								                        val chooser = Intent.createChooser(intent, "Open with")
+								                        context.startActivity(chooser)
+							                        } catch (e: Exception) {
+								                        // Handle error - no app available to open this file
+								                        scope.launch {
+									                        snackbarHostState.showSnackbar(
+										                        message = "No app available to open this file",
+										                        duration = SnackbarDuration.Short
+									                        )
+								                        }
+							                        }
+						                        }
+					                        },
+					                        onShareClick = {
+						                        currentFile.uri?.let { uri ->
+							                        try {
+								                        val intent = Intent(Intent.ACTION_SEND).apply {
+									                        type = currentFile.mediaType.let {
+										                        when (it) {
+											                        "video" -> "video/*"
+											                        else -> "image/*"
+										                        }
+									                        }
+									                        putExtra(Intent.EXTRA_STREAM, uri)
+									                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+								                        }
+								                        val chooser = Intent.createChooser(intent, "Share via")
+								                        context.startActivity(chooser)
+							                        } catch (e: Exception) {
+								                        // Handle error
+								                        scope.launch {
+									                        snackbarHostState.showSnackbar(
+										                        message = "Unable to share file",
+										                        duration = SnackbarDuration.Short
+									                        )
+								                        }
+							                        }
+						                        }
+					                        },
 					                        modifier = Modifier
 						                        .align(Alignment.BottomStart)
 						                        .zIndex(2f)
@@ -269,7 +311,6 @@ fun SorterMediaScreen(
 			                        .zIndex(1f)
 	                        )
 
-                        // Keep Reveal at Bottom
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -280,7 +321,7 @@ fun SorterMediaScreen(
 	                        GestureIndicator(
 		                        visible = keepIconAlpha > 0.01f,
 		                        icon = Icons.Default.CheckCircle,
-		                        text = "Release to keep",
+		                        text = "Keep",
 		                        containerColor = MaterialTheme.colorScheme.surface,
 		                        contentColor = Color(0xFF4CAF50),
 		                        alpha = keepIconAlpha,
@@ -300,7 +341,6 @@ fun SorterMediaScreen(
 	                        )
                         }
                         
-                        // Zoom overlay - renders on top of everything when zooming
                         if (!isCompleted && currentFile != null) {
 	                        ZoomOverlay(
 		                        uri = currentFile.uri,

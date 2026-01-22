@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -29,20 +28,31 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntOffset
-import kotlin.math.roundToInt
+import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import me.saket.telephoto.zoomable.rememberZoomableState
 import me.saket.telephoto.zoomable.zoomable
+import kotlin.math.roundToInt
 
 /**
- * Zoom overlay that appears on top of the card when user zooms
+ * Full-screen zoom overlay with shared element transition support.
+ * 
+ * Features:
+ * - Shared element transition with shape morphing (rounded card → square overlay)
  * - Black semi-transparent background
- * - Fully zoomable image
- * - Single tap to dismiss
+ * - Fully zoomable image using Telephoto library
  * - Double-tap when zoomed out to dismiss
  * - Swipe down to dismiss (when not zoomed in)
- * - Pinch-to-close handled by parent
+ * - Pinch gestures handled by parent
+ * 
+ * @param uri The URI of the media to display
+ * @param fileName The name of the file (for content description)
+ * @param sharedTransitionScope The scope managing shared transitions
+ * @param animatedVisibilityScope The scope for animated visibility
+ * @param isVisible Whether the overlay is visible
+ * @param onDismiss Callback when user wants to close the overlay
+ * @param modifier Additional modifiers
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -82,6 +92,9 @@ fun ZoomOverlay(
                             .build()
                     }
 
+                    // Create shared element key based on URI
+                    val sharedElementKey = ImageElementKey(uri)
+                    
                     val zoomableState = rememberZoomableState()
                     
                     // Track zoom level
@@ -92,15 +105,21 @@ fun ZoomOverlay(
                     var lastTapTime by remember { mutableStateOf(0L) }
                     val doubleTapThreshold = 300L // ms
 
-                    // Fully zoomable image on top
+                    // Fully zoomable image with shared element transition
                     SubcomposeAsyncImage(
                         model = imageRequest,
                         contentDescription = fileName,
                         modifier = Modifier
                             .fillMaxSize()
-                            .sharedElement(
-                                rememberSharedContentState(key = "media-${uri}"),
-                                animatedVisibilityScope = animatedVisibilityScope
+                            .sharedBoundsRevealWithShapeMorph(
+                                sharedContentState = rememberSharedContentState(key = sharedElementKey),
+                                sharedTransitionScope = sharedTransitionScope,
+                                animatedVisibilityScope = this@AnimatedVisibility,
+                                resizeMode = SharedTransitionScope.ResizeMode.ScaleToBounds(),
+                                restingShapeCornerRadius = 0.dp,   // Overlay is square
+                                targetShapeCornerRadius = 24.dp,   // Card corner radius
+                                renderInOverlayDuringTransition = true,
+                                keepChildrenSizePlacement = true
                             )
                             .offset { IntOffset(0, offsetY.roundToInt()) }
                             .graphicsLayer {

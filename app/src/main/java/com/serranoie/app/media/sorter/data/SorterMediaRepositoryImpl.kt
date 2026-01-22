@@ -1,5 +1,6 @@
 package com.serranoie.app.media.sorter.data
 
+import android.net.Uri
 import android.util.Log
 import com.serranoie.app.media.sorter.data.datasource.MediaDataSource
 import com.serranoie.app.media.sorter.domain.AppError
@@ -66,6 +67,14 @@ class SorterMediaRepositoryImpl @Inject constructor(
             is Result.Error -> result
             is Result.Loading -> Result.Loading
         }
+    }
+    
+    override suspend fun deleteMedia(uri: Uri): Result<Boolean> {
+        return mediaDataSource.deleteMedia(uri)
+    }
+    
+    override suspend fun deleteMultipleMedia(uris: List<Uri>): Result<Int> {
+        return mediaDataSource.deleteMultipleMedia(uris)
     }
     
     override fun clearCache() {

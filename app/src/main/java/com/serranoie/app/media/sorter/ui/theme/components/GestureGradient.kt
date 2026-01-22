@@ -70,7 +70,7 @@ private fun GestureGradientTopPreview() {
         ) {
             GestureGradient(
                 progress = 1f,
-                color = MaterialTheme.colorScheme.error,
+                color = Color(0xFFF54545),
                 isTop = true,
                 modifier = Modifier.align(Alignment.TopCenter)
             )
@@ -108,7 +108,7 @@ private fun GestureGradientPartialPreview() {
         ) {
             GestureGradient(
                 progress = 0.5f,
-                color = MaterialTheme.colorScheme.error,
+                color = Color(0xFFF54545),
                 isTop = true,
                 modifier = Modifier.align(Alignment.TopCenter)
             )

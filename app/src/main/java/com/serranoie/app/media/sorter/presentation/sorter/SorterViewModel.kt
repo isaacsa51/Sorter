@@ -23,6 +23,7 @@ import javax.inject.Inject
 class SorterViewModel @Inject constructor(
     private val sorterMediaUseCase: SorterMediaUseCase,
     private val getMediaRandomBatchesUseCase: GetMediaRandomBatchesUseCase,
+    private val deleteMediaUseCase: com.serranoie.app.media.sorter.domain.DeleteMediaUseCase,
     private val mediaFileMapper: MediaFileMapper,
     private val undoManager: UndoManager<MediaFileUi>
 ) : ViewModel() {
@@ -160,7 +161,7 @@ class SorterViewModel @Inject constructor(
             _effects.send(
                 SorterEffect.ShowUndoSnackbar(
                     file = file,
-                    message = "${file.fileName} moved to trash"
+                    message = "Media moved to trash"
                 )
             )
         }
@@ -223,12 +224,104 @@ class SorterViewModel @Inject constructor(
     }
     
     private fun removeFromDeleted(fileId: String) {
-        _uiState.update { state ->
-            state.copy(
-                deletedFiles = state.deletedFiles.filter { it.id != fileId }
-            )
+        viewModelScope.launch {
+            val fileToDelete = _uiState.value.deletedFiles.find { it.id == fileId }
+            
+            if (fileToDelete?.uri != null) {
+                Log.d(TAG, "Deleting file $fileId (${fileToDelete.fileName}) from storage")
+                
+                // Delete the file from device storage
+                when (val result = deleteMediaUseCase(fileToDelete.uri)) {
+                    is Result.Success -> {
+                        Log.d(TAG, "Successfully deleted ${fileToDelete.fileName} from storage")
+                        
+                        // Remove from state
+                        _uiState.update { state ->
+                            state.copy(
+                                deletedFiles = state.deletedFiles.filter { it.id != fileId }
+                            )
+                        }
+                        
+                        _effects.send(SorterEffect.ShowMessage("Deleted ${fileToDelete.fileName}"))
+                    }
+                    is Result.Error -> {
+                        Log.e(TAG, "Failed to delete ${fileToDelete.fileName}: ${result.error.message}")
+                        _effects.send(SorterEffect.ShowError("Failed to delete file: ${result.error.getFullMessage()}"))
+                    }
+                    is Result.Loading -> {
+                        // Should not happen
+                    }
+                }
+            } else {
+                Log.w(TAG, "File $fileId has no URI, just removing from list")
+                
+                // Just remove from state if no URI
+                _uiState.update { state ->
+                    state.copy(
+                        deletedFiles = state.deletedFiles.filter { it.id != fileId }
+                    )
+                }
+            }
+            
+            Log.d(TAG, "Remaining files in deleted list: ${_uiState.value.deletedCount}")
         }
-        Log.d(TAG, "Removed file $fileId from deleted list. Remaining: ${_uiState.value.deletedCount}")
+    }
+    
+    fun deleteAllReviewedFiles() {
+        viewModelScope.launch {
+            val filesToDelete = _uiState.value.deletedFiles
+            val totalCount = filesToDelete.size
+            
+            if (totalCount == 0) {
+                Log.d(TAG, "No files to delete")
+                return@launch
+            }
+            
+            Log.d(TAG, "Permanently deleting $totalCount reviewed files from storage")
+            
+            // Extract URIs from files
+            val uris = filesToDelete.mapNotNull { it.uri }
+            
+            if (uris.isEmpty()) {
+                Log.w(TAG, "No valid URIs found for deletion")
+                _effects.send(SorterEffect.ShowError("Unable to delete files: No valid URIs"))
+                return@launch
+            }
+            
+            // Delete files from device storage
+            when (val result = deleteMediaUseCase.deleteMultiple(uris)) {
+                is Result.Success -> {
+                    val deletedCount = result.data
+                    Log.d(TAG, "Successfully deleted $deletedCount of $totalCount files from storage")
+                    
+                    // Clear all deleted files from the state
+                    _uiState.update { state ->
+                        state.copy(deletedFiles = emptyList())
+                    }
+                    
+                    _effects.send(
+                        SorterEffect.ShowMessage(
+                            "Permanently deleted $deletedCount file${if (deletedCount != 1) "s" else ""}"
+                        )
+                    )
+                    
+                    if (deletedCount < totalCount) {
+                        val failedCount = totalCount - deletedCount
+                        Log.w(TAG, "Failed to delete $failedCount files")
+                        _effects.send(
+                            SorterEffect.ShowError("Warning: $failedCount file${if (failedCount != 1) "s" else ""} could not be deleted")
+                        )
+                    }
+                }
+                is Result.Error -> {
+                    Log.e(TAG, "Error deleting files: ${result.error.message}")
+                    _effects.send(SorterEffect.ShowError("Failed to delete files: ${result.error.getFullMessage()}"))
+                }
+                is Result.Loading -> {
+                    // Should not happen
+                }
+            }
+        }
     }
     
     private fun dismissError() {

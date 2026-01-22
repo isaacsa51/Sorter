@@ -65,7 +65,7 @@ fun AppNavHost(
             ReviewScreen(
                 deletedFiles = uiState.deletedFiles,
                 onBack = {
-                    onNavigate(NavigationAction.NavigateTo(Screen.Sorter))
+                    onNavigate(NavigationAction.NavigateBack)
                 },
                 onSettings = {
                     onNavigate(NavigationAction.NavigateTo(Screen.Settings))
@@ -75,6 +75,9 @@ fun AppNavHost(
                 },
                 onRemoveItem = { file ->
                     sorterViewModel.removeFromDeleted(file)
+                },
+                onDeleteAll = {
+                    sorterViewModel.deleteAllReviewedFiles()
                 }
             )
         }
@@ -99,7 +102,7 @@ fun AppNavHost(
                 onMaterialYouToggle = { settingsViewModel.toggleDynamicColors() },
                 onBlurredBackgroundToggle = { settingsViewModel.toggleBlurredBackground() },
                 onBack = {
-                    onNavigate(NavigationAction.NavigateTo(Screen.Review))
+                    onNavigate(NavigationAction.NavigateBack)
                 }
             )
         }

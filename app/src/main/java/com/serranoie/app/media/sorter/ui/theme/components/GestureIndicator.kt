@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
+
 package com.serranoie.app.media.sorter.ui.theme.components
 
 import androidx.compose.animation.AnimatedVisibility
@@ -83,7 +85,7 @@ fun GestureIndicator(
             Spacer(modifier = Modifier.height(if (scale > 1f) 12.dp else 8.dp))
             Text(
                 text = text,
-                style = MaterialTheme.typography.labelLarge,
+                style = MaterialTheme.typography.labelLargeEmphasized,
                 color = contentColor,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.graphicsLayer { this.alpha = alpha }
@@ -104,7 +106,7 @@ private fun GestureIndicatorPreview() {
             GestureIndicator(
                 visible = true,
                 icon = Icons.Default.Delete,
-                text = "Release to delete",
+                text = "Delete",
                 containerColor = MaterialTheme.colorScheme.errorContainer,
                 contentColor = MaterialTheme.colorScheme.error,
                 alpha = 1f,
@@ -126,7 +128,7 @@ private fun GestureIndicatorKeepPreview() {
             GestureIndicator(
                 visible = true,
                 icon = Icons.Default.CheckCircle,
-                text = "Release to keep",
+                text = "Keep",
                 containerColor = Color(0xFF4CAF50),
                 contentColor = MaterialTheme.colorScheme.surface,
                 alpha = 1f,

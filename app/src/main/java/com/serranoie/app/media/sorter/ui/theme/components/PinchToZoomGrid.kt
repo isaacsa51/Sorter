@@ -84,9 +84,6 @@ suspend fun PointerInputScope.detectPinchGestures(
     }
 }
 
-/**
- * Data class representing different zoom levels for the grid
- */
 data class GridZoomLevel(
     val level: Int, val columns: Int, val nextLevel: Int, val previousLevel: Int
 )
@@ -141,7 +138,7 @@ fun Modifier.pinchToZoomGrid(
     zoomThresholdIn: Float = 1.25f,
     zoomThresholdOut: Float = 0.75f
 ): Modifier {
-    var zoom by remember(1f)
+    var zoom by remember { mutableStateOf(1f) }
 
     val motionScheme = MotionScheme.expressive()
 
@@ -160,12 +157,12 @@ fun Modifier.pinchToZoomGrid(
             detectPinchGestures(pass = PointerEventPass.Initial, onGesture = { _, zoomChange ->
                 val newScale = zoom * zoomChange
                 when {
-                    newScale > zoomThresholdIn -> {
+                    newScale.compareTo(zoomThresholdIn) > 0 -> {
                         onZoomIn()
                         zoom = 1f
                     }
 
-                    newScale < zoomThresholdOut -> {
+                    newScale.compareTo(zoomThresholdOut) < 0 -> {
                         onZoomOut()
                         zoom = 1f
                     }
