@@ -21,10 +21,12 @@ class SettingsDataStore(private val context: Context) {
         private val THEME_MODE_KEY = stringPreferencesKey("theme_mode")
         private val USE_DYNAMIC_COLORS_KEY = booleanPreferencesKey("use_dynamic_colors")
         private val USE_BLURRED_BACKGROUND_KEY = booleanPreferencesKey("use_blurred_background")
+        private val TUTORIAL_COMPLETED_KEY = booleanPreferencesKey("tutorial_completed")
         
         private const val DEFAULT_THEME_MODE = "SYSTEM"
         private const val DEFAULT_USE_DYNAMIC_COLORS = true
         private const val DEFAULT_USE_BLURRED_BACKGROUND = true
+        private const val DEFAULT_TUTORIAL_COMPLETED = false
     }
     
     val appSettingsFlow: Flow<AppSettings> = dataStore.data.map { preferences ->
@@ -33,7 +35,8 @@ class SettingsDataStore(private val context: Context) {
                 preferences[THEME_MODE_KEY] ?: DEFAULT_THEME_MODE
             ),
             useDynamicColors = preferences[USE_DYNAMIC_COLORS_KEY] ?: DEFAULT_USE_DYNAMIC_COLORS,
-            useBlurredBackground = preferences[USE_BLURRED_BACKGROUND_KEY] ?: DEFAULT_USE_BLURRED_BACKGROUND
+            useBlurredBackground = preferences[USE_BLURRED_BACKGROUND_KEY] ?: DEFAULT_USE_BLURRED_BACKGROUND,
+            tutorialCompleted = preferences[TUTORIAL_COMPLETED_KEY] ?: DEFAULT_TUTORIAL_COMPLETED
         )
     }
     
@@ -52,6 +55,18 @@ class SettingsDataStore(private val context: Context) {
     suspend fun setUseBlurredBackground(enabled: Boolean) {
         dataStore.edit { preferences ->
             preferences[USE_BLURRED_BACKGROUND_KEY] = enabled
+        }
+    }
+    
+    suspend fun setTutorialCompleted(completed: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[TUTORIAL_COMPLETED_KEY] = completed
+        }
+    }
+    
+    suspend fun resetTutorial() {
+        dataStore.edit { preferences ->
+            preferences[TUTORIAL_COMPLETED_KEY] = false
         }
     }
 

@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Policy
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -30,6 +31,7 @@ fun SettingsScreen(
     onThemeChange: (String) -> Unit,
     onMaterialYouToggle: () -> Unit,
     onBlurredBackgroundToggle: () -> Unit,
+    onResetTutorial: () -> Unit = {},
     onBack: () -> Unit = {}
 ) {
     Scaffold(
@@ -282,6 +284,36 @@ fun SettingsScreen(
                             )
                             Text(
                                 text = "1.0.0 (Build 1)",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+            
+            item {
+                PaddedListGroup(
+                    title = "Tutorial"
+                ) {
+                    CustomPaddedListItem(
+                        onClick = onResetTutorial,
+                        position = PaddedListItemPosition.Single
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Reset Tutorial",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "Show the tutorial again on next launch",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

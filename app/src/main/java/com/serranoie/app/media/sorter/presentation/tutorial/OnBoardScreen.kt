@@ -84,7 +84,6 @@ fun OnBoardScreen(
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(10.dp)
                 )
-                // Trash Swipe Up
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Box(
                         modifier = Modifier
@@ -114,10 +113,7 @@ fun OnBoardScreen(
                         modifier = Modifier.size(18.dp)
                     )
                 }
-                // Preview Media Card
 	            SwipeableCard(
-		            //fileName = "Nature_Trip_04.jpg",
-		            //fileInfo = "12 MB • 2 days ago",
 		            modifier = Modifier.size(320.dp, 340.dp),
 		            onKeep = {
 			            scope.launch {
@@ -135,7 +131,6 @@ fun OnBoardScreen(
 
 		            }
 	            )
-                // Keep Swipe Down
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_arrow_downward),
@@ -165,7 +160,6 @@ fun OnBoardScreen(
                     }
                     Spacer(modifier = Modifier.height(24.dp))
                 }
-                // Get Started Button
                 Button(
                     modifier = Modifier
                         .fillMaxWidth()

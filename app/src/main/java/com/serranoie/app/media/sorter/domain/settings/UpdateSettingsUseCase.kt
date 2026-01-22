@@ -19,6 +19,14 @@ class UpdateSettingsUseCase @Inject constructor(
         repository.setUseBlurredBackground(enabled)
     }
     
+    suspend fun setTutorialCompleted(completed: Boolean) {
+        repository.setTutorialCompleted(completed)
+    }
+    
+    suspend fun resetTutorial() {
+        repository.resetTutorial()
+    }
+    
     suspend fun resetSettings() {
         repository.resetSettings()
     }

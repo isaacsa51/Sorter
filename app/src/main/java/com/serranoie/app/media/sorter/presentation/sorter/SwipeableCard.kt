@@ -81,7 +81,6 @@ fun SwipeableCard(
         }
     }
     
-    // Combine entrance scale with gesture scale
     val cardScale by remember {
         derivedStateOf {
             entranceScale.value * gestureScale
@@ -149,13 +148,11 @@ fun SwipeableCard(
                                                 alpha.animateTo(0f, spring(stiffness = Spring.StiffnessMedium))
                                             }
                                         )
-                                        // Call the callback only after animations complete
                                         onTrash()
-                                        // Reset all animated values for next card
+
                                         offsetY.snapTo(0f)
                                         alpha.snapTo(0f)
                                         entranceScale.snapTo(0.5f)
-                                        // Animate in the next card
                                         launch {
                                             alpha.animateTo(1f, animationSpec = tween(300, easing = EaseOut))
                                         }
@@ -167,7 +164,6 @@ fun SwipeableCard(
                                 offsetY.value > 180 -> {
                                     scope.launch {
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        // Run animations in parallel and wait for both to complete
                                         kotlinx.coroutines.joinAll(
                                             launch {
                                                 offsetY.animateTo(1200f, spring(stiffness = Spring.StiffnessMedium))
@@ -176,13 +172,12 @@ fun SwipeableCard(
                                                 alpha.animateTo(0f, spring(stiffness = Spring.StiffnessMedium))
                                             }
                                         )
-                                        // Call the callback only after animations complete
                                         onKeep()
-                                        // Reset all animated values for next card
+
                                         offsetY.snapTo(0f)
                                         alpha.snapTo(0f)
                                         entranceScale.snapTo(0.5f)
-                                        // Animate in the next card
+
                                         launch {
                                             alpha.animateTo(1f, animationSpec = tween(300, easing = EaseOut))
                                         }
@@ -223,7 +218,6 @@ private fun SwipeableCardPreview() {
             onTrash = {},
             cardContent = {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    // Placeholder Image
                     Image(
                         painter = painterResource(id = R.drawable.demo_image),
                         contentDescription = null,
@@ -231,7 +225,6 @@ private fun SwipeableCardPreview() {
                         contentScale = ContentScale.Crop
                     )
 
-                    // Type Badge
                     Surface(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
@@ -259,7 +252,6 @@ private fun SwipeableCardPreview() {
                         }
                     }
 
-                    // Bottom info overlay
                     Column(
                         modifier = Modifier
                             .align(Alignment.BottomStart)

@@ -258,7 +258,6 @@ fun SorterMediaScreen(
 								                        val chooser = Intent.createChooser(intent, "Open with")
 								                        context.startActivity(chooser)
 							                        } catch (e: Exception) {
-								                        // Handle error - no app available to open this file
 								                        scope.launch {
 									                        snackbarHostState.showSnackbar(
 										                        message = "No app available to open this file",
@@ -284,7 +283,6 @@ fun SorterMediaScreen(
 								                        val chooser = Intent.createChooser(intent, "Share via")
 								                        context.startActivity(chooser)
 							                        } catch (e: Exception) {
-								                        // Handle error
 								                        scope.launch {
 									                        snackbarHostState.showSnackbar(
 										                        message = "Unable to share file",

@@ -21,10 +21,6 @@ import com.serranoie.app.media.sorter.presentation.sorter.SorterViewModel
 import com.serranoie.app.media.sorter.ui.theme.SorterTheme
 import dagger.hilt.android.AndroidEntryPoint
 
-/**
- * Main Activity - Entry point of the application
- * Handles theme application and navigation setup
- */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,16 +32,11 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-/**
- * Root composable that applies theme based on settings
- */
 @Composable
 fun SorterApp() {
-    // Get settings ViewModel
     val settingsViewModel: SettingsViewModel = hiltViewModel()
     val appSettings by settingsViewModel.appSettings.collectAsState()
     
-    // Determine if we should use dark theme
     val darkTheme = when (appSettings.themeMode) {
         ThemeMode.LIGHT -> false
         ThemeMode.DARK -> true
@@ -60,9 +51,6 @@ fun SorterApp() {
     }
 }
 
-/**
- * Main app content with navigation
- */
 @Composable
 fun SorterAppContent() {
     val navigationViewModel: NavigationViewModel = hiltViewModel()

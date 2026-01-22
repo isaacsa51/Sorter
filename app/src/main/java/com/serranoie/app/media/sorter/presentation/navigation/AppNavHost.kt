@@ -28,6 +28,8 @@ fun AppNavHost(
         Screen.Onboard -> {
             OnBoardScreen(
                 onGetStarted = {
+                    settingsViewModel.markTutorialCompleted()
+                    
                     if (hasPermissions) {
                         onNavigate(NavigationAction.NavigateTo(Screen.Sorter))
                     } else {
@@ -77,7 +79,7 @@ fun AppNavHost(
                     sorterViewModel.removeFromDeleted(file)
                 },
                 onDeleteAll = {
-                    sorterViewModel.deleteAllReviewedFiles()
+                    sorterViewModel.clearDeletedFilesAfterPermissionGrant()
                 }
             )
         }
@@ -101,6 +103,10 @@ fun AppNavHost(
                 },
                 onMaterialYouToggle = { settingsViewModel.toggleDynamicColors() },
                 onBlurredBackgroundToggle = { settingsViewModel.toggleBlurredBackground() },
+                onResetTutorial = {
+                    settingsViewModel.resetTutorial()
+                    onNavigate(NavigationAction.NavigateTo(Screen.Onboard))
+                },
                 onBack = {
                     onNavigate(NavigationAction.NavigateBack)
                 }

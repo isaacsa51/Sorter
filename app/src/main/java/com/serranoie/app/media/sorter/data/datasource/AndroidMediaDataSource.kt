@@ -136,7 +136,6 @@ class AndroidMediaDataSource @Inject constructor(
                         failureCount++
                     }
                 } catch (e: RecoverableSecurityException) {
-                    // On Android 10+, we need user permission for files we didn't create
                     Log.w(TAG, "RecoverableSecurityException for $uri, needs user permission")
                     pendingUris.add(uri)
                     failureCount++
@@ -151,7 +150,6 @@ class AndroidMediaDataSource @Inject constructor(
             
             Log.d(TAG, "Deleted $successCount of ${uris.size} media files ($failureCount failed, ${pendingUris.size} need permission)")
             
-            // If all failures are RecoverableSecurityException, we can request permission
             if (successCount == 0 && pendingUris.size == uris.size) {
                 Log.d(TAG, "All files need user permission, returning error to trigger permission request")
                 AppError.PermissionError().asError()
@@ -169,15 +167,12 @@ class AndroidMediaDataSource @Inject constructor(
     
     override fun createDeleteRequest(uris: List<Uri>): android.app.PendingIntent? {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            // Android 11+ (API 30)
             Log.d(TAG, "Creating delete request for ${uris.size} files (Android 11+)")
             MediaStore.createDeleteRequest(context.contentResolver, uris)
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            // Android 10 (API 29)
             Log.d(TAG, "Creating delete request for ${uris.size} files (Android 10)")
             MediaStore.createDeleteRequest(context.contentResolver, uris)
         } else {
-            // Android 9 and below - no special permission needed
             Log.d(TAG, "No delete request needed for Android < 10")
             null
         }
@@ -219,7 +214,6 @@ class AndroidMediaDataSource @Inject constructor(
                     val contentUriWithId = ContentUris.withAppendedId(contentUri, id)
                     val extension = name.substringAfterLast(".", if (mediaType == "image") "jpg" else "mp4")
                     
-                    // Use dateTaken if available, otherwise use dateAdded
                     val timestamp = if (dateTaken > 0) dateTaken else dateAdded * 1000
                     val fileDate = Instant.ofEpochMilli(timestamp)
                         .atZone(ZoneId.systemDefault())

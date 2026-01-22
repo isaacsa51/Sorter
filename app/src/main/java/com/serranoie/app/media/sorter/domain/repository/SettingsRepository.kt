@@ -12,6 +12,10 @@ interface SettingsRepository {
     suspend fun setUseDynamicColors(enabled: Boolean)
     
     suspend fun setUseBlurredBackground(enabled: Boolean)
+    
+    suspend fun setTutorialCompleted(completed: Boolean)
+    
+    suspend fun resetTutorial()
 
     suspend fun resetSettings()
 }

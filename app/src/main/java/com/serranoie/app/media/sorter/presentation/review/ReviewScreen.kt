@@ -63,10 +63,8 @@ fun ReviewScreen(
 ) {
 	var showDeleteConfirmDialog by remember { mutableStateOf(false) }
 	
-	// Setup delete media handler for Android 10+
 	val (deleteHandler, _) = rememberDeleteMediaHandler(
 		onPermissionGranted = {
-			// Permission granted, proceed with deletion
 			onDeleteAll()
 		},
 		onPermissionDenied = {
@@ -126,7 +124,7 @@ fun ReviewScreen(
 				EmptyState()
 			} else {
 				PinchToZoomGridContainer(
-					modifier = Modifier.fillMaxSize(), initialLevel = 1, // Start with 2 columns
+					modifier = Modifier.fillMaxSize(), initialLevel = 1,
 					zoomLevels = zoomLevels
 				) { zoomLevel, onZoomLevelChange ->
 					ZoomableStaggeredGrid(
@@ -147,7 +145,6 @@ fun ReviewScreen(
 					itemCount = deletedFiles.size,
 					onConfirm = {
 						showDeleteConfirmDialog = false
-						// Request permission first on Android 10+
 						val uris = deletedFiles.mapNotNull { it.uri }
 						deleteHandler.requestDeletePermission(uris)
 					},
@@ -227,12 +224,11 @@ private fun ZoomableStaggeredGrid(
 				detectPinchGestures(pass = PointerEventPass.Initial, onGesture = { _, zoomChange ->
 					val newScale = zoom * zoomChange
 					when {
-						// Pinch out (zoom > 1.25) = zoom in = fewer columns = larger items
 						newScale > 1.25f -> {
 							onZoomLevelChange(zoomLevel.previousLevel)
 							zoom = 1f
 						}
-						// Pinch in (zoom < 0.75) = zoom out = more columns = smaller items
+
 						newScale < 0.75f -> {
 							onZoomLevelChange(zoomLevel.nextLevel)
 							zoom = 1f

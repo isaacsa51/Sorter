@@ -22,6 +22,14 @@ class SettingsRepositoryImpl @Inject constructor(
         settingsDataStore.setUseBlurredBackground(enabled)
     }
     
+    override suspend fun setTutorialCompleted(completed: Boolean) {
+        settingsDataStore.setTutorialCompleted(completed)
+    }
+    
+    override suspend fun resetTutorial() {
+        settingsDataStore.resetTutorial()
+    }
+    
     override suspend fun resetSettings() {
         settingsDataStore.clearSettings()
     }
