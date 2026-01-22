@@ -336,6 +336,7 @@ fun SettingsScreenPreview() {
             onThemeChange = {},
             onMaterialYouToggle = {},
             onBlurredBackgroundToggle = {},
+            onResetTutorial = {},
             onBack = {}
         )
     }
