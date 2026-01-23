@@ -191,7 +191,6 @@ fun VideoPlayer(
                         } else {
                             exoPlayer.play()
                         }
-                        isPlaying = !isPlaying
                     },
                     modifier = Modifier
                         .size(72.dp)

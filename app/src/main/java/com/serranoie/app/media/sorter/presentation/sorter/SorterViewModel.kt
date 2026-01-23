@@ -142,7 +142,20 @@ class SorterViewModel @Inject constructor(
 	}
 
 	private fun keepCurrentFile() {
-		advanceToNext()
+		_uiState.update { state ->
+			val nextIndex = state.currentIndex + 1
+			if (nextIndex < allMediaFiles.size) {
+				state.copy(
+					currentFile = allMediaFiles[nextIndex], 
+					currentIndex = nextIndex
+				)
+			} else {
+				state.copy(
+					currentFile = null, 
+					isCompleted = true
+				)
+			}
+		}
 	}
 
 	private fun trashCurrentFile() {
@@ -150,6 +163,8 @@ class SorterViewModel @Inject constructor(
 		val currentIndex = _uiState.value.currentIndex
 
 		undoManager.recordAction(file, currentIndex)
+
+		allMediaFiles.removeAt(currentIndex)
 
 		_uiState.update { state ->
 			state.copy(
@@ -167,7 +182,7 @@ class SorterViewModel @Inject constructor(
 			)
 		}
 
-		advanceToNext()
+		showCurrentOrComplete()
 	}
 
 	private fun undoLastTrash() {
@@ -182,16 +197,13 @@ class SorterViewModel @Inject constructor(
 			)
 		}
 
-		if (lastAction.previousIndex < allMediaFiles.size) {
-			allMediaFiles.add(lastAction.previousIndex, lastAction.item)
-		} else {
-			allMediaFiles.add(lastAction.item)
-		}
+		val insertIndex = lastAction.previousIndex.coerceAtMost(allMediaFiles.size)
+		allMediaFiles.add(insertIndex, lastAction.item)
 
 		_uiState.update { state ->
 			state.copy(
 				currentFile = lastAction.item,
-				currentIndex = lastAction.previousIndex,
+				currentIndex = insertIndex,
 				isCompleted = false
 			)
 		}
@@ -200,7 +212,7 @@ class SorterViewModel @Inject constructor(
 			_effects.send(SorterEffect.ShowMessage("File restored"))
 		}
 
-		Log.d(TAG, "Restored ${lastAction.item.fileName} at index ${lastAction.previousIndex}")
+		Log.d(TAG, "Restored ${lastAction.item.fileName} at index $insertIndex")
 	}
 
 	private fun resetSorter() {
@@ -228,20 +240,17 @@ class SorterViewModel @Inject constructor(
 		viewModelScope.launch {
 			val fileToDelete = _uiState.value.deletedFiles.find { it.id == fileId }
 
+			_uiState.update { state ->
+				state.copy(
+					deletedFiles = state.deletedFiles.filter { it.id != fileId })
+			}
+
 			if (fileToDelete?.uri != null) {
 				Log.d(TAG, "Deleting file $fileId (${fileToDelete.fileName}) from storage")
 
-				// Delete the file from device storage
 				when (val result = deleteMediaUseCase(fileToDelete.uri)) {
 					is Result.Success -> {
 						Log.d(TAG, "Successfully deleted ${fileToDelete.fileName} from storage")
-
-						// Remove from state
-						_uiState.update { state ->
-							state.copy(
-								deletedFiles = state.deletedFiles.filter { it.id != fileId })
-						}
-
 						_effects.send(SorterEffect.ShowMessage("Deleted ${fileToDelete.fileName}"))
 					}
 
@@ -250,7 +259,7 @@ class SorterViewModel @Inject constructor(
 							TAG,
 							"Failed to delete ${fileToDelete.fileName}: ${result.error.message}"
 						)
-						_effects.send(SorterEffect.ShowError("Failed to delete file: ${result.error.getFullMessage()}"))
+						_effects.send(SorterEffect.ShowMessage("Removed from list (file may already be deleted)"))
 					}
 
 					is Result.Loading -> {
@@ -258,12 +267,7 @@ class SorterViewModel @Inject constructor(
 					}
 				}
 			} else {
-				Log.w(TAG, "File $fileId has no URI, just removing from list")
-
-				_uiState.update { state ->
-					state.copy(
-						deletedFiles = state.deletedFiles.filter { it.id != fileId })
-				}
+				Log.w(TAG, "File $fileId has no URI, removed from list")
 			}
 
 			Log.d(TAG, "Remaining files in deleted list: ${_uiState.value.deletedCount}")
@@ -353,16 +357,17 @@ class SorterViewModel @Inject constructor(
 		loadMediaFilesRandom()
 	}
 
-	private fun advanceToNext() {
+	private fun showCurrentOrComplete() {
 		_uiState.update { state ->
-			if (state.currentIndex < allMediaFiles.size - 1) {
-				val nextIndex = state.currentIndex + 1
+			if (state.currentIndex < allMediaFiles.size) {
 				state.copy(
-					currentFile = allMediaFiles[nextIndex], currentIndex = nextIndex
+					currentFile = allMediaFiles[state.currentIndex], 
+					currentIndex = state.currentIndex
 				)
 			} else {
 				state.copy(
-					currentFile = null, isCompleted = true
+					currentFile = null, 
+					isCompleted = true
 				)
 			}
 		}

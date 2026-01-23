@@ -331,12 +331,12 @@ fun SorterMediaScreen(
 									                        seekToProgress = newProgress
 								                        },
 								                        enabled = true,
-								                        waveLength = 16.dp,
-								                        waveHeight = if (isVideoPlaying) 8.dp else 4.dp,
-								                        waveVelocity = if (isVideoPlaying) 15.dp to WaveDirection.HEAD else 0.dp to WaveDirection.HEAD,
+								                        waveLength = 22.dp,
+								                        waveHeight = if (isVideoPlaying) 4.dp else 2.dp,
+								                        waveVelocity = if (isVideoPlaying) 8.dp to WaveDirection.HEAD else 0.dp to WaveDirection.HEAD,
 								                        waveThickness = 3.dp,
 								                        trackThickness = 3.dp,
-								                        colors = androidx.compose.material3.SliderDefaults.colors(
+								                        colors = SliderDefaults.colors(
 									                        thumbColor = MaterialTheme.colorScheme.primary,
 									                        activeTrackColor = MaterialTheme.colorScheme.primary,
 									                        inactiveTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
