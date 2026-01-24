@@ -2,6 +2,7 @@ package com.serranoie.app.media.sorter.presentation.settings
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.BugReport
@@ -23,7 +24,7 @@ import com.serranoie.app.media.sorter.ui.theme.components.CustomPaddedListItem
 import com.serranoie.app.media.sorter.ui.theme.components.PaddedListGroup
 import com.serranoie.app.media.sorter.ui.theme.components.PaddedListItemPosition
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SettingsScreen(
     appTheme: String,
@@ -37,13 +38,16 @@ fun SettingsScreen(
     onResetTutorial: () -> Unit = {},
     onBack: () -> Unit = {}
 ) {
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            MediumTopAppBar(
+            LargeTopAppBar(
                 title = {
                     Text(
                         text = "Settings",
-                        style = MaterialTheme.typography.headlineMedium,
+                        style = MaterialTheme.typography.headlineMediumEmphasized,
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -55,10 +59,11 @@ fun SettingsScreen(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.mediumTopAppBarColors(
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     titleContentColor = MaterialTheme.colorScheme.onSurface
-                )
+                ),
+                scrollBehavior = scrollBehavior
             )
         }
     ) { paddingValues ->

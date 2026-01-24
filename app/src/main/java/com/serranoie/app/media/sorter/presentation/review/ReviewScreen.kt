@@ -1,8 +1,6 @@
 package com.serranoie.app.media.sorter.presentation.review
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -18,11 +16,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Image
@@ -44,6 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -60,7 +59,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ReviewScreen(
 	deletedFiles: List<MediaFileUi>,
@@ -73,11 +72,17 @@ fun ReviewScreen(
 	var showDeleteConfirmDialog by remember { mutableStateOf(false) }
 	var selectedMediaForFullscreen by remember { mutableStateOf<MediaFileUi?>(null) }
 	val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+	val gridState = rememberLazyStaggeredGridState()
 	val (deleteHandler, _) = rememberDeleteMediaHandler(onPermissionGranted = {
 		onDeleteAll()
 	}, onPermissionDenied = {
 		// TODO: Check what to do when user denied permission
 	})
+
+	// FAB and hint should be expanded/visible when at the top of the list
+	val expandedFab by remember { 
+		derivedStateOf { gridState.firstVisibleItemIndex == 0 }
+	}
 
 	// Define zoom levels: 1 column, 2 columns, 3 columns, 4 columns
 	val zoomLevels = remember {
@@ -101,6 +106,7 @@ fun ReviewScreen(
 		if (deletedFiles.isNotEmpty()) {
 			ExtendedFloatingActionButton(
 				onClick = { showDeleteConfirmDialog = true },
+				expanded = expandedFab,
 				icon = {
 					Icon(
 						imageVector = Icons.Default.Delete, contentDescription = "Delete all"
@@ -108,9 +114,8 @@ fun ReviewScreen(
 				},
 				text = {
 					Text(
-						text = "Delete All (${deletedFiles.size})",
-						style = MaterialTheme.typography.labelLarge,
-						fontWeight = FontWeight.SemiBold
+						text = "Delete",
+						style = MaterialTheme.typography.labelLargeEmphasized,
 					)
 				},
 				containerColor = MaterialTheme.colorScheme.errorContainer,
@@ -136,13 +141,10 @@ fun ReviewScreen(
 						onRemoveItem = onRemoveItem,
 						onItemDoubleTap = { file ->
 							selectedMediaForFullscreen = file
-						}
+						},
+						gridState = gridState
 					)
 				}
-
-				ZoomHint(
-					itemCount = deletedFiles.size, modifier = Modifier.align(Alignment.BottomCenter)
-				)
 			}
 
 			if (showDeleteConfirmDialog) {
@@ -206,7 +208,8 @@ private fun ZoomableStaggeredGrid(
 	zoomLevel: GridZoomLevel, 
 	onZoomLevelChange: (Int) -> Unit,
 	onRemoveItem: (MediaFileUi) -> Unit,
-	onItemDoubleTap: (MediaFileUi) -> Unit = {}
+	onItemDoubleTap: (MediaFileUi) -> Unit = {},
+	gridState: androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 ) {
 	var zoom by remember { mutableStateOf(1f) }
 
@@ -219,6 +222,7 @@ private fun ZoomableStaggeredGrid(
 	)
 
 	LazyVerticalStaggeredGrid(
+		state = gridState,
 		columns = StaggeredGridCells.Fixed(zoomLevel.columns),
 		contentPadding = PaddingValues(16.dp),
 		horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -259,27 +263,6 @@ private fun ZoomableStaggeredGrid(
 				onDoubleTap = { onItemDoubleTap(file) }
 			)
 		}
-	}
-}
-
-@Composable
-private fun ZoomHint(
-	itemCount: Int, modifier: Modifier = Modifier
-) {
-	val colorScheme = MaterialTheme.colorScheme
-
-	Surface(
-		modifier = modifier.padding(16.dp),
-		shape = RoundedCornerShape(20.dp),
-		color = colorScheme.surfaceVariant.copy(alpha = 0.9f),
-		tonalElevation = 4.dp
-	) {
-		Text(
-			text = "Pinch to zoom • $itemCount item${if (itemCount != 1) "s" else ""}",
-			modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-			style = MaterialTheme.typography.labelMedium,
-			color = colorScheme.onSurfaceVariant
-		)
 	}
 }
 
@@ -733,3 +716,4 @@ fun ReviewScreenPreview() {
 			), onBack = {}, onSettings = {}, onInfo = {}, onRemoveItem = {}, onDeleteAll = {})
 	}
 }
+
