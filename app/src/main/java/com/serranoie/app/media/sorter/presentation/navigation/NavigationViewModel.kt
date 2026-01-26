@@ -13,50 +13,53 @@ import javax.inject.Inject
 
 @HiltViewModel
 class NavigationViewModel @Inject constructor(
-    private val getAppSettings: GetAppSettingsUseCase
+	private val getAppSettings: GetAppSettingsUseCase
 ) : ViewModel() {
-    
-    private val _navigationState = MutableStateFlow(NavigationState())
-    val navigationState: StateFlow<NavigationState> = _navigationState.asStateFlow()
-    
-    init {
-        viewModelScope.launch {
-            getAppSettings().collect { settings ->
-                if (settings.tutorialCompleted && _navigationState.value.currentScreen == Screen.Onboard) {
-                    navigateTo(Screen.Sorter)
-                }
-            }
-        }
-    }
-    
-    fun navigateTo(screen: Screen) {
-        _navigationState.update { it.copy(currentScreen = screen) }
-    }
 
-    fun navigateBack() {
-	    val previousScreen = when (val currentScreen = _navigationState.value.currentScreen) {
-            Screen.Sorter -> Screen.Onboard
-            Screen.Review -> Screen.Sorter
-            Screen.Settings -> Screen.Review
-            else -> currentScreen
-        }
-        navigateTo(previousScreen)
-    }
+	private val _navigationState = MutableStateFlow(NavigationState())
+	val navigationState: StateFlow<NavigationState> = _navigationState.asStateFlow()
 
-    fun updatePermissions(granted: Boolean) {
-        _navigationState.update { it.copy(hasPermissions = granted) }
-    }
+	private var tutorialCompleted = false
 
-    fun showPermissionDialog(show: Boolean) {
-        _navigationState.update { it.copy(showPermissionDialog = show) }
-    }
+	init {
+		viewModelScope.launch {
+			getAppSettings().collect { settings ->
+				tutorialCompleted = settings.tutorialCompleted
+				if (settings.tutorialCompleted && _navigationState.value.currentScreen == Screen.Onboard) {
+					navigateTo(Screen.Sorter)
+				}
+			}
+		}
+	}
 
-    fun handleAction(action: NavigationAction) {
-        when (action) {
-            is NavigationAction.NavigateTo -> navigateTo(action.screen)
-            is NavigationAction.NavigateBack -> navigateBack()
-            is NavigationAction.UpdatePermissions -> updatePermissions(action.granted)
-            is NavigationAction.ShowPermissionDialog -> showPermissionDialog(action.show)
-        }
-    }
+	fun navigateTo(screen: Screen) {
+		_navigationState.update { it.copy(currentScreen = screen) }
+	}
+
+	fun navigateBack() {
+		val previousScreen = when (val currentScreen = _navigationState.value.currentScreen) {
+			Screen.Sorter -> if (tutorialCompleted) currentScreen else Screen.Onboard
+			Screen.Review -> Screen.Sorter
+			Screen.Settings -> Screen.Review
+			else -> currentScreen
+		}
+		navigateTo(previousScreen)
+	}
+
+	fun updatePermissions(granted: Boolean) {
+		_navigationState.update { it.copy(hasPermissions = granted) }
+	}
+
+	fun showPermissionDialog(show: Boolean) {
+		_navigationState.update { it.copy(showPermissionDialog = show) }
+	}
+
+	fun handleAction(action: NavigationAction) {
+		when (action) {
+			is NavigationAction.NavigateTo -> navigateTo(action.screen)
+			is NavigationAction.NavigateBack -> navigateBack()
+			is NavigationAction.UpdatePermissions -> updatePermissions(action.granted)
+			is NavigationAction.ShowPermissionDialog -> showPermissionDialog(action.show)
+		}
+	}
 }

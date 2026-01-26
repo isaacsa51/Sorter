@@ -1,5 +1,6 @@
 package com.serranoie.app.media.sorter.presentation.review
 
+import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
@@ -47,6 +48,9 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.decode.VideoFrameDecoder
+import com.serranoie.app.media.sorter.data.MediaFile
+import com.serranoie.app.media.sorter.domain.Result
+import com.serranoie.app.media.sorter.domain.repository.MediaRepository
 import com.serranoie.app.media.sorter.presentation.model.MediaFileUi
 import com.serranoie.app.media.sorter.ui.theme.components.PinchToZoomGridContainer
 import com.serranoie.app.media.sorter.ui.theme.components.GridZoomLevel
@@ -56,12 +60,15 @@ import com.serranoie.app.media.sorter.ui.theme.util.PreviewWrapper
 import com.serranoie.app.media.sorter.ui.theme.AureaSpacing
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ReviewScreen(
 	deletedFiles: List<MediaFileUi>,
+	repository: MediaRepository,
+	useTrash: Boolean,
 	onBack: () -> Unit = {},
 	onSettings: () -> Unit = {},
 	onInfo: () -> Unit = {},
@@ -73,11 +80,15 @@ fun ReviewScreen(
 	val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 	val gridState = rememberLazyStaggeredGridState()
 	val coroutineScope = rememberCoroutineScope()
-	val (deleteHandler, _) = rememberDeleteMediaHandler(onPermissionGranted = {
-		onDeleteAll()
-	}, onPermissionDenied = {
-		// TODO: Check what to do when user denied permission
-	})
+	val (deleteHandler, _) = rememberDeleteMediaHandler(
+		repository = repository,
+		onPermissionGranted = {
+			onDeleteAll()
+		},
+		onPermissionDenied = {
+			// TODO: Check what to do when user denied permission
+		}
+	)
 
 	// FAB and hint should be expanded/visible when at the top of the list
 	val expandedFab by remember { 
@@ -152,7 +163,7 @@ fun ReviewScreen(
 					showDeleteConfirmDialog = false
 					val uris = deletedFiles.mapNotNull { it.uri }
 					coroutineScope.launch {
-						deleteHandler.requestDeletePermission(uris)
+						deleteHandler.requestDeletePermission(uris, useTrash)
 					}
 				}, onDismiss = {
 					showDeleteConfirmDialog = false
@@ -681,6 +692,17 @@ private fun FullscreenMediaViewer(
 @DevicePreview
 @Composable
 fun ReviewScreenPreview() {
+	// [info] - Mock repository for preview. NEED TO DELETE THIS
+	val mockRepository = object : MediaRepository {
+		override suspend fun fetchMediaFiles() = Result.Success(emptyList<MediaFile>())
+		override suspend fun getMediaByFolder() = Result.Success(emptyMap<String, List<MediaFile>>())
+		override suspend fun getMediaGroupedByDate() = Result.Success(emptyMap<LocalDate, List<MediaFile>>())
+		override suspend fun deleteMedia(uri: Uri) = Result.Success(true)
+		override suspend fun deleteMultipleMedia(uris: List<Uri>) = Result.Success(0)
+		override fun createDeletionRequest(uris: List<Uri>, useTrash: Boolean) = null
+		override fun clearCache() {}
+	}
+	
 	PreviewWrapper {
 		ReviewScreen(
 			deletedFiles = listOf(
@@ -721,7 +743,15 @@ fun ReviewScreenPreview() {
 					modified = "3 days ago",
 					path = "/photos/nature/mountains/"
 				)
-			), onBack = {}, onSettings = {}, onInfo = {}, onRemoveItem = {}, onDeleteAll = {})
+			),
+			repository = mockRepository,
+			useTrash = false,
+			onBack = {}, 
+			onSettings = {}, 
+			onInfo = {}, 
+			onRemoveItem = {}, 
+			onDeleteAll = {}
+		)
 	}
 }
 

@@ -25,6 +25,7 @@ import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
@@ -45,38 +46,40 @@ fun TutorialScreen(
 ) {
 	val colorScheme = MaterialTheme.colorScheme
 	val spacing = AureaSpacing.current
-	
-	// Track gesture progress for visual indicators
+
 	var keepProgress by remember { mutableFloatStateOf(0f) }
 	var trashProgress by remember { mutableFloatStateOf(0f) }
-	
-	// Animated values for gesture indicators
-	val keepIconAlpha = animateFloatAsState(keepProgress, animationSpec = tween(240), label = "keepAlpha").value
-	val keepIconScale = animateFloatAsState(0.7f + 0.5f * keepProgress, animationSpec = tween(240), label = "keepScale").value
-	val keepIconOffset = animateFloatAsState((-32f + 60f * keepProgress), animationSpec = tween(240), label = "keepOffset").value
-	
-	val trashIconAlpha = animateFloatAsState(trashProgress, animationSpec = tween(240), label = "trashAlpha").value
-	val trashIconScale = animateFloatAsState(0.7f + 0.5f * trashProgress, animationSpec = tween(240), label = "trashScale").value
-	val trashIconOffset = animateFloatAsState((32f - 60f * trashProgress), animationSpec = tween(240), label = "trashOffset").value
 
-	// Bouncy animation to hint at gesture interaction
+	val keepIconAlpha =
+		animateFloatAsState(keepProgress, animationSpec = tween(240), label = "keepAlpha").value
+	val keepIconScale = animateFloatAsState(
+		0.7f + 0.5f * keepProgress, animationSpec = tween(240), label = "keepScale"
+	).value
+	val keepIconOffset = animateFloatAsState(
+		(-32f + 60f * keepProgress), animationSpec = tween(240), label = "keepOffset"
+	).value
+
+	val trashIconAlpha =
+		animateFloatAsState(trashProgress, animationSpec = tween(240), label = "trashAlpha").value
+	val trashIconScale = animateFloatAsState(
+		0.7f + 0.5f * trashProgress, animationSpec = tween(240), label = "trashScale"
+	).value
+	val trashIconOffset = animateFloatAsState(
+		(32f - 60f * trashProgress), animationSpec = tween(240), label = "trashOffset"
+	).value
+
 	val infiniteTransition = rememberInfiniteTransition(label = "bounce")
 	val bounceOffset by infiniteTransition.animateFloat(
-		initialValue = 0f,
-		targetValue = 24f,
-		animationSpec = infiniteRepeatable(
+		initialValue = 0f, targetValue = 24f, animationSpec = infiniteRepeatable(
 			animation = keyframes {
 				durationMillis = 1400
 				0f at 0 with FastOutSlowInEasing
 				24f at 600 with LinearOutSlowInEasing
 				0f at 1400 with FastOutSlowInEasing
-			},
-			repeatMode = RepeatMode.Restart
-		),
-		label = "bounceOffset"
+			}, repeatMode = RepeatMode.Restart
+		), label = "bounceOffset"
 	)
 
-	// Mock data for MediaInfoOverlay
 	val mockFileInfo = FileInfo(
 		fileName = "IMG_Portrait-152124.jpg",
 		fileInfo = "2.4 MB • Yesterday",
@@ -131,7 +134,7 @@ fun TutorialScreen(
 
 				Text(
 					text = "Swipe to\nOrganize",
-					style = MaterialTheme.typography.displaySmallEmphasized,
+					style = MaterialTheme.typography.displaySmallEmphasized.copy(fontWeight = FontWeight.Bold),
 					color = colorScheme.onSurface,
 					textAlign = TextAlign.Center,
 				)
@@ -158,8 +161,7 @@ fun TutorialScreen(
 							.fillMaxWidth()
 							.align(Alignment.TopCenter)
 							.padding(top = trashIconOffset.coerceAtLeast(0f).dp + spacing.S)
-							.zIndex(3f),
-						contentAlignment = Alignment.TopCenter
+							.zIndex(3f), contentAlignment = Alignment.TopCenter
 					) {
 						GestureIndicator(
 							visible = trashIconAlpha > 0.01f,
@@ -171,7 +173,7 @@ fun TutorialScreen(
 							scale = trashIconScale
 						)
 					}
-					
+
 					SwipeableCard(
 						modifier = Modifier
 							.fillMaxSize()
@@ -222,17 +224,15 @@ fun TutorialScreen(
 									modifier = Modifier.align(Alignment.BottomStart)
 								)
 							}
-						}
-					)
-					
+						})
+
 					// Bottom gesture indicator (keep/save)
 					Box(
 						modifier = Modifier
 							.fillMaxWidth()
 							.align(Alignment.BottomCenter)
 							.padding(bottom = keepIconOffset.coerceAtLeast(0f).dp + spacing.S)
-							.zIndex(3f),
-						contentAlignment = Alignment.BottomCenter
+							.zIndex(3f), contentAlignment = Alignment.BottomCenter
 					) {
 						GestureIndicator(
 							visible = keepIconAlpha > 0.01f,

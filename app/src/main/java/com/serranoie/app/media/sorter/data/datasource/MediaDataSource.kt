@@ -22,4 +22,18 @@ interface MediaDataSource {
      * Returns a PendingIntent that should be launched by the Activity
      */
     fun createDeleteRequest(uris: List<Uri>): PendingIntent?
+    
+    /**
+     * Creates a trash request that moves files to trash bin (Android 11+)
+     * Returns a PendingIntent that should be launched by the Activity
+     */
+    fun createTrashRequest(uris: List<Uri>): PendingIntent?
+    
+    /**
+     * Creates a deletion request based on user preference
+     * @param uris List of URIs to delete/trash
+     * @param useTrash If true, moves to trash bin; if false, permanently deletes
+     * Returns a PendingIntent that should be launched by the Activity
+     */
+    fun createDeletionRequest(uris: List<Uri>, useTrash: Boolean): PendingIntent?
 }

@@ -67,31 +67,25 @@ fun SettingsScreen(
 
 
 	Scaffold(
-		modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-		topBar = {
+		modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection), topBar = {
 			LargeTopAppBar(
 				title = {
 					Text(
 						text = "Settings",
 						style = MaterialTheme.typography.titleLargeEmphasized,
 					)
-				},
-				navigationIcon = {
+				}, navigationIcon = {
 					IconButton(onClick = onBack) {
 						Icon(
-							imageVector = Icons.Default.ArrowBack,
-							contentDescription = "Back"
+							imageVector = Icons.Default.ArrowBack, contentDescription = "Back"
 						)
 					}
-				},
-				colors = TopAppBarDefaults.topAppBarColors(
+				}, colors = TopAppBarDefaults.topAppBarColors(
 					containerColor = MaterialTheme.colorScheme.surface,
 					titleContentColor = MaterialTheme.colorScheme.onSurface
-				),
-				scrollBehavior = scrollBehavior
+				), scrollBehavior = scrollBehavior
 			)
-		}
-	) { paddingValues ->
+		}) { paddingValues ->
 		LazyColumn(
 			modifier = Modifier
 				.fillMaxSize()
@@ -102,13 +96,11 @@ fun SettingsScreen(
 				PaddedListGroup(
 					title = "Appearance"
 				) {
-					// App Theme
 					CustomPaddedListItem(
 						onClick = {
 							showThemeDialog = true
 							view.weakHapticFeedback()
-						},
-						position = PaddedListItemPosition.First
+						}, position = PaddedListItemPosition.First
 					) {
 						Icon(
 							imageVector = Icons.Default.Brightness4,
@@ -135,10 +127,8 @@ fun SettingsScreen(
 						)
 					}
 
-					// Material You Toggle
 					CustomPaddedListItem(
-						onClick = onMaterialYouToggle,
-						position = PaddedListItemPosition.Middle
+						onClick = onMaterialYouToggle, position = PaddedListItemPosition.Middle
 					) {
 						Icon(
 							imageVector = Icons.Default.Palette,
@@ -159,21 +149,17 @@ fun SettingsScreen(
 							)
 						}
 						Switch(
-							checked = isMaterialYouEnabled,
-							onCheckedChange = {
+							checked = isMaterialYouEnabled, onCheckedChange = {
 								onMaterialYouToggle()
 								view.toggleFeedback()
-							}
-						)
+							})
 					}
 
-					// Background Mode
 					CustomPaddedListItem(
 						onClick = {
 							onBlurredBackgroundToggle()
 							view.strongHapticFeedback()
-						},
-						position = PaddedListItemPosition.Last
+						}, position = PaddedListItemPosition.Last
 					) {
 						Icon(
 							imageVector = Icons.Default.Brightness4,
@@ -202,14 +188,12 @@ fun SettingsScreen(
 				}
 			}
 
-			// Playback Section
 			item {
 				PaddedListGroup(
 					title = "Playback"
 				) {
 					CustomPaddedListItem(
-						onClick = onAutoPlayToggle,
-						position = PaddedListItemPosition.Single
+						onClick = onAutoPlayToggle, position = PaddedListItemPosition.Single
 					) {
 						Icon(
 							imageVector = Icons.Default.PlayArrow,
@@ -230,12 +214,10 @@ fun SettingsScreen(
 							)
 						}
 						Switch(
-							checked = isAutoPlayEnabled,
-							onCheckedChange = {
+							checked = isAutoPlayEnabled, onCheckedChange = {
 								onAutoPlayToggle()
 								view.toggleFeedback()
-							}
-						)
+							})
 					}
 				}
 			}
@@ -272,12 +254,10 @@ fun SettingsScreen(
 								)
 							}
 							Switch(
-								checked = syncFileToTrashBin,
-								onCheckedChange = {
+								checked = syncFileToTrashBin, onCheckedChange = {
 									onSyncFileToTrashBinToggle()
 									view.toggleFeedback()
-								},
-								modifier = Modifier.padding(end = aureaSpacing.XS)
+								}, modifier = Modifier.padding(end = aureaSpacing.XS)
 							)
 						},
 						expandedContent = {
@@ -287,8 +267,7 @@ fun SettingsScreen(
 								modifier = Modifier
 									.fillMaxWidth()
 									.padding(
-										horizontal = aureaSpacing.XS,
-										vertical = aureaSpacing.S
+										horizontal = aureaSpacing.XS, vertical = aureaSpacing.S
 									)
 							) {
 								Row(
@@ -339,8 +318,7 @@ fun SettingsScreen(
 									color = MaterialTheme.colorScheme.onSurfaceVariant
 								)
 							}
-						}
-					)
+						})
 				}
 			}
 
@@ -352,8 +330,7 @@ fun SettingsScreen(
 						onClick = {
 							Utils.openWebLink(context, "https://www.github.com/isaacsa51/Sorter")
 							view.weakHapticFeedback()
-						},
-						position = PaddedListItemPosition.First
+						}, position = PaddedListItemPosition.First
 					) {
 						Icon(
 							imageVector = Icons.Default.Info,
@@ -379,8 +356,7 @@ fun SettingsScreen(
 						onClick = {
 							Utils.openWebLink(context, "https://www.github.com/isaacsa51/Sorter")
 							view.weakHapticFeedback()
-						},
-						position = PaddedListItemPosition.Middle
+						}, position = PaddedListItemPosition.Middle
 					) {
 						Icon(
 							imageVector = Icons.Default.Policy,
@@ -405,12 +381,10 @@ fun SettingsScreen(
 					CustomPaddedListItem(
 						onClick = {
 							Utils.openWebLink(
-								context,
-								"https://www.github.com/isaacsa51/Sorter/issues/new"
+								context, "https://www.github.com/isaacsa51/Sorter/issues/new"
 							)
 							view.weakHapticFeedback()
-						},
-						position = PaddedListItemPosition.Middle
+						}, position = PaddedListItemPosition.Middle
 					) {
 						Icon(
 							imageVector = Icons.Default.BugReport,
@@ -435,8 +409,7 @@ fun SettingsScreen(
 					CustomPaddedListItem(
 						onClick = {
 							view.weakHapticFeedback()
-						},
-						position = PaddedListItemPosition.Last
+						}, position = PaddedListItemPosition.Last
 					) {
 						Icon(
 							imageVector = Icons.Default.Info,
@@ -468,8 +441,7 @@ fun SettingsScreen(
 						onClick = {
 							onResetTutorial()
 							view.toggleFeedback()
-						},
-						position = PaddedListItemPosition.Single
+						}, position = PaddedListItemPosition.Single
 					) {
 						Icon(
 							imageVector = Icons.Default.Refresh,
@@ -498,8 +470,7 @@ fun SettingsScreen(
 			ThemePickerDialog(
 				currentTheme = appTheme,
 				onThemeSelected = onThemeChange,
-				onDismiss = { showThemeDialog = false }
-			)
+				onDismiss = { showThemeDialog = false })
 		}
 	}
 }
@@ -520,7 +491,6 @@ fun SettingsScreenPreview() {
 			onResetTutorial = {},
 			onBack = {},
 			syncFileToTrashBin = false,
-			onSyncFileToTrashBinToggle = {}
-		)
+			onSyncFileToTrashBinToggle = {})
 	}
 }
