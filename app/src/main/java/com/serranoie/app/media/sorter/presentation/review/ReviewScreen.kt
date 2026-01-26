@@ -6,7 +6,6 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
@@ -42,7 +41,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -55,6 +53,7 @@ import com.serranoie.app.media.sorter.ui.theme.components.GridZoomLevel
 import com.serranoie.app.media.sorter.ui.theme.components.detectPinchGestures
 import com.serranoie.app.media.sorter.ui.theme.util.DevicePreview
 import com.serranoie.app.media.sorter.ui.theme.util.PreviewWrapper
+import com.serranoie.app.media.sorter.ui.theme.AureaSpacing
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -73,6 +72,7 @@ fun ReviewScreen(
 	var selectedMediaForFullscreen by remember { mutableStateOf<MediaFileUi?>(null) }
 	val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 	val gridState = rememberLazyStaggeredGridState()
+	val coroutineScope = rememberCoroutineScope()
 	val (deleteHandler, _) = rememberDeleteMediaHandler(onPermissionGranted = {
 		onDeleteAll()
 	}, onPermissionDenied = {
@@ -151,7 +151,9 @@ fun ReviewScreen(
 				DeleteAllConfirmationDialog(itemCount = deletedFiles.size, onConfirm = {
 					showDeleteConfirmDialog = false
 					val uris = deletedFiles.mapNotNull { it.uri }
-					deleteHandler.requestDeletePermission(uris)
+					coroutineScope.launch {
+						deleteHandler.requestDeletePermission(uris)
+					}
 				}, onDismiss = {
 					showDeleteConfirmDialog = false
 				})
@@ -171,11 +173,12 @@ fun ReviewScreen(
 @Composable
 private fun EmptyState() {
 	val colorScheme = MaterialTheme.colorScheme
+	val spacing = AureaSpacing.current
 
 	Column(
 		modifier = Modifier
 			.fillMaxSize()
-			.padding(32.dp),
+			.padding(spacing.XL),
 		horizontalAlignment = Alignment.CenterHorizontally,
 		verticalArrangement = Arrangement.Center
 	) {
@@ -185,13 +188,13 @@ private fun EmptyState() {
 			modifier = Modifier.size(80.dp),
 			tint = colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
 		)
-		Spacer(modifier = Modifier.height(16.dp))
+		Spacer(modifier = Modifier.height(spacing.M))
 		Text(
 			text = "No deleted media",
 			style = MaterialTheme.typography.titleLargeEmphasized,
 			color = colorScheme.onSurfaceVariant,
 		)
-		Spacer(modifier = Modifier.height(8.dp))
+		Spacer(modifier = Modifier.height(spacing.XS))
 		Text(
 			text = "Files you delete will appear here for review",
 			style = MaterialTheme.typography.bodyMedium,
@@ -221,12 +224,14 @@ private fun ZoomableStaggeredGrid(
 		label = "zoomTransition"
 	)
 
+	val spacing = AureaSpacing.current
+	
 	LazyVerticalStaggeredGrid(
 		state = gridState,
 		columns = StaggeredGridCells.Fixed(zoomLevel.columns),
-		contentPadding = PaddingValues(16.dp),
-		horizontalArrangement = Arrangement.spacedBy(8.dp),
-		verticalItemSpacing = 8.dp,
+		contentPadding = PaddingValues(spacing.M),
+		horizontalArrangement = Arrangement.spacedBy(spacing.XS),
+		verticalItemSpacing = spacing.XS,
 		modifier = Modifier
 			.fillMaxSize()
 			.graphicsLayer {
@@ -319,6 +324,7 @@ private fun SwipeableMediaGridItem(
 	val offsetX = remember { Animatable(0f) }
 	var isRemoving by remember { mutableStateOf(false) }
 	val scope = rememberCoroutineScope()
+	val spacing = AureaSpacing.current
 	val swipeThreshold = -200f
 
 	AnimatedVisibility(
@@ -332,9 +338,9 @@ private fun SwipeableMediaGridItem(
 				modifier = Modifier
 					.matchParentSize()
 					.background(
-						MaterialTheme.colorScheme.errorContainer, RoundedCornerShape(12.dp)
+						MaterialTheme.colorScheme.errorContainer, RoundedCornerShape(spacing.S)
 					)
-					.padding(16.dp), contentAlignment = Alignment.CenterEnd
+					.padding(spacing.M), contentAlignment = Alignment.CenterEnd
 			) {
 				Row(
 					horizontalArrangement = Arrangement.End,
@@ -406,6 +412,7 @@ private fun MediaGridItem(
 	onDoubleTap: () -> Unit = {}
 ) {
 	val colorScheme = MaterialTheme.colorScheme
+	val spacing = AureaSpacing.current
 
 	val heightMultiplier = when (file.id.hashCode() % 3) {
 		0 -> 1.2f
@@ -429,7 +436,7 @@ private fun MediaGridItem(
 					onDoubleTap = { onDoubleTap() }
 				)
 			},
-		shape = RoundedCornerShape(12.dp),
+		shape = RoundedCornerShape(spacing.S),
 		colors = CardDefaults.cardColors(
 			containerColor = if (file.mediaType == "video") {
 				colorScheme.tertiaryContainer
@@ -497,7 +504,7 @@ private fun MediaGridItem(
 			Surface(
 				modifier = Modifier
 					.align(Alignment.TopEnd)
-					.padding(8.dp),
+					.padding(spacing.XS),
 				shape = CircleShape,
 				color = colorScheme.surface.copy(alpha = 0.8f)
 			) {
@@ -509,7 +516,7 @@ private fun MediaGridItem(
 					},
 					contentDescription = null,
 					modifier = Modifier
-						.padding(6.dp)
+						.padding(spacing.XS)
 						.size(14.dp),
 					tint = colorScheme.onSurface
 				)
@@ -523,7 +530,7 @@ private fun MediaGridItem(
 						.background(
 							Color.Black.copy(alpha = 0.6f)
 						)
-						.padding(8.dp)
+						.padding(spacing.XS)
 				) {
 					Text(
 						text = file.fileName,
@@ -593,6 +600,7 @@ private fun FullscreenMediaViewer(
 	onDismiss: () -> Unit
 ) {
 	val context = LocalContext.current
+	val spacing = AureaSpacing.current
 	
 	Box(
 		modifier = Modifier
@@ -630,7 +638,7 @@ private fun FullscreenMediaViewer(
 		Surface(
 			modifier = Modifier
 				.align(Alignment.TopEnd)
-				.padding(16.dp),
+				.padding(spacing.M),
 			shape = CircleShape,
 			color = Color.Black.copy(alpha = 0.5f)
 		) {
@@ -651,7 +659,7 @@ private fun FullscreenMediaViewer(
 			color = Color.Black.copy(alpha = 0.7f)
 		) {
 			Column(
-				modifier = Modifier.padding(16.dp)
+				modifier = Modifier.padding(spacing.M)
 			) {
 				Text(
 					text = media.fileName,
@@ -659,7 +667,7 @@ private fun FullscreenMediaViewer(
 					color = Color.White,
 					fontWeight = FontWeight.Bold
 				)
-				Spacer(modifier = Modifier.height(4.dp))
+				Spacer(modifier = Modifier.height(spacing.XS))
 				Text(
 					text = media.fileInfo,
 					style = MaterialTheme.typography.bodySmall,

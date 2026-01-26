@@ -335,8 +335,10 @@ class SorterViewModel @Inject constructor(
 	fun clearDeletedFilesAfterPermissionGrant() {
 		viewModelScope.launch {
 			val deletedCount = _uiState.value.deletedCount
-			Log.d(TAG, "Clearing $deletedCount files from state after permission-based deletion")
+			Log.d(TAG, "Clearing $deletedCount files from state after system deletion via MediaStore.createDeleteRequest")
 
+			// Note: MediaStore.createDeleteRequest() handles the actual file deletion when user grants permission.
+			// The system automatically deletes the files, so we just need to clear the UI state.
 			_uiState.update { state ->
 				state.copy(deletedFiles = emptyList())
 			}

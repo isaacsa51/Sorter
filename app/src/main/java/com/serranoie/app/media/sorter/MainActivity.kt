@@ -42,7 +42,8 @@ fun SorterApp() {
 
 	SorterTheme(
 		darkTheme = darkTheme,
-		dynamicColor = appSettings.useDynamicColors
+		dynamicColor = appSettings.useDynamicColors,
+		useAureaPadding = appSettings.syncTrashDeletion
 	) {
 		val navigationViewModel: NavigationViewModel = hiltViewModel()
 		val settingsViewModel: SettingsViewModel = hiltViewModel()

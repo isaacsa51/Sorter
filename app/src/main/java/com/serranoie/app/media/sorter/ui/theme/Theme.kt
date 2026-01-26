@@ -38,6 +38,7 @@ fun SorterTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = true,
     useExpressiveTypography: Boolean = true,
+    useAureaPadding: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -58,7 +59,10 @@ fun SorterTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = typography,
-        content = content
-    )
+        typography = typography
+    ) {
+        AureaScaleProvider(useAureaPadding = useAureaPadding) {
+            content()
+        }
+    }
 }

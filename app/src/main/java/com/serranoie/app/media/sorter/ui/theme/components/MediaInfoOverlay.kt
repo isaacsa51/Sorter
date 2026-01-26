@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.serranoie.app.media.sorter.ui.theme.util.ComponentPreview
 import com.serranoie.app.media.sorter.ui.theme.util.PreviewWrapper
+import com.serranoie.app.media.sorter.ui.theme.AureaSpacing
 
 /**
  * Data class representing file information to be displayed
@@ -70,6 +71,9 @@ fun MediaInfoOverlay(
     videoSlider: (@Composable () -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
+    val spacing = AureaSpacing.current
+    val cornerRadius = spacing.S
+    
     SharedTransitionLayout(
         modifier = modifier
     ) {
@@ -85,12 +89,12 @@ fun MediaInfoOverlay(
                         )
                     )
                 )
-                .padding(24.dp),
+                .padding(spacing.L),
             verticalArrangement = Arrangement.Bottom
         ) {
             if (videoSlider != null && !isExpanded) {
                 videoSlider()
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(spacing.S))
             }
             
             Text(
@@ -102,7 +106,7 @@ fun MediaInfoOverlay(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.fillMaxWidth().basicMarquee()
             )
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(spacing.XS))
 
             AnimatedVisibility(
                 visible = !isExpanded,
@@ -132,7 +136,9 @@ fun MediaInfoOverlay(
                     fileInfo = fileInfo,
                     onExpandToggle = onExpandToggle,
                     sharedTransitionScope = this@SharedTransitionLayout,
-                    animatedVisibilityScope = this
+                    animatedVisibilityScope = this,
+                    spacing = spacing,
+                    cornerRadius = cornerRadius
                 )
             }
 
@@ -158,7 +164,9 @@ private fun SharedTransitionScope.ExpandedInfoContent(
     fileInfo: FileInfo,
     onExpandToggle: () -> Unit,
     sharedTransitionScope: SharedTransitionScope,
-    animatedVisibilityScope: AnimatedVisibilityScope
+    animatedVisibilityScope: AnimatedVisibilityScope,
+    spacing: com.serranoie.app.media.sorter.ui.theme.PhiSpacing,
+    cornerRadius: androidx.compose.ui.unit.Dp
 ) {
     with(sharedTransitionScope) {
         Surface(
@@ -172,12 +180,12 @@ private fun SharedTransitionScope.ExpandedInfoContent(
                     resizeMode = SharedTransitionScope.ResizeMode.ScaleToBounds()
                 )
                 .clickable { onExpandToggle() },
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(cornerRadius),
             color = Color.White.copy(alpha = 0.12f),
             tonalElevation = 0.dp
         ) {
             Column(
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.padding(spacing.M)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -185,19 +193,19 @@ private fun SharedTransitionScope.ExpandedInfoContent(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         InfoItem("File Size", fileInfo.fileSize)
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(spacing.M))
                         InfoItem("Date Created", fileInfo.dateCreated)
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(spacing.M))
                         InfoItem("Modified", fileInfo.modified)
                     }
 
-                    Spacer(modifier = Modifier.width(20.dp))
+                    Spacer(modifier = Modifier.width(spacing.M))
 
                     Column(modifier = Modifier.weight(1f)) {
                         InfoItem("Dimensions", fileInfo.dimensions)
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(spacing.M))
                         InfoItem("Last Accessed", fileInfo.lastAccessed)
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(spacing.M))
                         InfoItem("Path", fileInfo.path)
                     }
                 }

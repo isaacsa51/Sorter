@@ -6,11 +6,12 @@ import androidx.compose.ui.tooling.preview.Preview
 @Preview(
     showBackground = true,
     uiMode = Configuration.UI_MODE_NIGHT_NO or Configuration.UI_MODE_TYPE_NORMAL,
+	showSystemUi = true,
 )
 @Preview(
     showBackground = true,
     uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_NIGHT_YES,
-    device = "spec:parent=pixel_5,navigation=buttons",
+    device = "spec:parent=pixel_5,navigation=buttons", showSystemUi = true,
 )
 annotation class DevicePreview
 
@@ -65,14 +66,14 @@ annotation class ComponentPreviewMedium
     showBackground = true,
     showSystemUi = false,
     widthDp = 320,
-    heightDp = 200
+    heightDp = 600
 )
 @Preview(
     name = "Dark Mode",
     showBackground = true,
     showSystemUi = false,
     widthDp = 320,
-    heightDp = 200,
+    heightDp = 600,
     uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL
 )
 annotation class ComponentPreviewLarge
@@ -85,15 +86,15 @@ annotation class ComponentPreviewLarge
     name = "Light Mode",
     showBackground = true,
     showSystemUi = false,
-    widthDp = 300,
-    heightDp = 250
+    widthDp = 320,
+    heightDp = 600
 )
 @Preview(
     name = "Dark Mode",
     showBackground = true,
     showSystemUi = false,
-    widthDp = 300,
-    heightDp = 250,
+	widthDp = 320,
+	heightDp = 600,
     uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL
 )
 annotation class ComponentPreview

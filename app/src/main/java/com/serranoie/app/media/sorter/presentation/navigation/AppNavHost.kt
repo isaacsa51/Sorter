@@ -24,10 +24,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import kotlinx.coroutines.launch
-import kotlin.math.absoluteValue
 import com.serranoie.app.media.sorter.data.settings.AppSettings
 import com.serranoie.app.media.sorter.data.settings.ThemeMode
-import com.serranoie.app.media.sorter.presentation.tutorial.OnBoardScreen
+import com.serranoie.app.media.sorter.presentation.tutorial.TutorialScreen
 import com.serranoie.app.media.sorter.presentation.review.ReviewScreen
 import com.serranoie.app.media.sorter.presentation.settings.SettingsScreen
 import com.serranoie.app.media.sorter.presentation.settings.SettingsViewModel
@@ -142,7 +141,7 @@ fun AppNavHost(
         ) { screen ->
         when (screen) {
         Screen.Onboard -> {
-            OnBoardScreen(
+            TutorialScreen(
                 onGetStarted = {
                     settingsViewModel.markTutorialCompleted()
                     
@@ -211,6 +210,7 @@ fun AppNavHost(
                 isMaterialYouEnabled = appSettings.useDynamicColors,
                 isBlurredBackgroundEnabled = appSettings.useBlurredBackground,
                 isAutoPlayEnabled = appSettings.autoPlayVideos,
+                syncFileToTrashBin = appSettings.syncTrashDeletion,
                 onThemeChange = { theme ->
                     val themeMode = when (theme) {
                         "Light" -> ThemeMode.LIGHT
@@ -222,6 +222,7 @@ fun AppNavHost(
                 onMaterialYouToggle = { settingsViewModel.toggleDynamicColors() },
                 onBlurredBackgroundToggle = { settingsViewModel.toggleBlurredBackground() },
                 onAutoPlayToggle = { settingsViewModel.toggleAutoPlayVideos() },
+                onSyncFileToTrashBinToggle = { settingsViewModel.toggleSyncTrashDeletion() },
                 onResetTutorial = {
                     settingsViewModel.resetTutorial()
                     onNavigate(NavigationAction.NavigateTo(Screen.Onboard))

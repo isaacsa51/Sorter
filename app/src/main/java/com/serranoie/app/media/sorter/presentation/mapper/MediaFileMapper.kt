@@ -2,7 +2,7 @@ package com.serranoie.app.media.sorter.presentation.mapper
 
 import com.serranoie.app.media.sorter.data.MediaFile
 import com.serranoie.app.media.sorter.presentation.model.MediaFileUi
-import com.serranoie.app.media.sorter.util.MediaFileFormatter
+import com.serranoie.app.media.sorter.presentation.mapper.MediaFileFormatter
 import javax.inject.Inject
 
 class MediaFileMapper @Inject constructor(

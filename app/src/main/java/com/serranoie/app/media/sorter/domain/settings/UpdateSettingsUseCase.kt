@@ -31,6 +31,10 @@ class UpdateSettingsUseCase @Inject constructor(
         repository.setAutoPlayVideos(enabled)
     }
     
+    suspend fun setUseAureaPadding(enabled: Boolean) {
+        repository.setUseAureaPadding(enabled)
+    }
+    
     suspend fun resetSettings() {
         repository.resetSettings()
     }

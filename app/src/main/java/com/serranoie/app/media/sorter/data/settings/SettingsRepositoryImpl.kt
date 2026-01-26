@@ -34,6 +34,10 @@ class SettingsRepositoryImpl @Inject constructor(
         settingsDataStore.setAutoPlayVideos(enabled)
     }
     
+    override suspend fun setUseAureaPadding(enabled: Boolean) {
+        settingsDataStore.setUseAureaPadding(enabled)
+    }
+    
     override suspend fun resetSettings() {
         settingsDataStore.clearSettings()
     }

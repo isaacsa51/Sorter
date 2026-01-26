@@ -18,6 +18,8 @@ interface SettingsRepository {
     suspend fun resetTutorial()
     
     suspend fun setAutoPlayVideos(enabled: Boolean)
+    
+    suspend fun setUseAureaPadding(enabled: Boolean)
 
     suspend fun resetSettings()
 }

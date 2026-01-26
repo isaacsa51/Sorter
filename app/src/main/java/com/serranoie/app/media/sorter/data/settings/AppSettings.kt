@@ -5,7 +5,8 @@ data class AppSettings(
     val useDynamicColors: Boolean = true,
     val useBlurredBackground: Boolean = true,
     val tutorialCompleted: Boolean = false,
-    val autoPlayVideos: Boolean = false
+    val autoPlayVideos: Boolean = false,
+    val syncTrashDeletion: Boolean = false
 )
 
 enum class ThemeMode {

@@ -1,4 +1,4 @@
-package com.serranoie.app.media.sorter.util
+package com.serranoie.app.media.sorter.presentation.mapper
 
 import java.text.SimpleDateFormat
 import java.time.LocalDate
@@ -22,7 +22,7 @@ class MediaFileFormatter @Inject constructor() {
     fun formatRelativeDate(date: LocalDate): String {
         val today = LocalDate.now()
         val daysDiff = ChronoUnit.DAYS.between(date, today).toInt()
-        
+
         return when {
             daysDiff == 0 -> "Today"
             daysDiff == 1 -> "Yesterday"
@@ -52,7 +52,7 @@ class MediaFileFormatter @Inject constructor() {
         val dateStr = formatRelativeDate(date)
         return "$sizeStr • $dateStr"
     }
-    
+
     fun formatFileInfoWithPath(fileSizeBytes: Long, path: String): String {
         val sizeStr = formatFileSize(fileSizeBytes)
         return "$sizeStr • $path"

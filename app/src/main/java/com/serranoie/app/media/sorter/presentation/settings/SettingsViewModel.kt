@@ -97,6 +97,13 @@ class SettingsViewModel @Inject constructor(
             updateSettings.setAutoPlayVideos(!current)
         }
     }
+    
+    fun toggleSyncTrashDeletion() {
+        viewModelScope.launch {
+            val current = appSettings.value.syncTrashDeletion
+            updateSettings.setUseAureaPadding(!current)
+        }
+    }
 
     fun resetToDefaults() {
         viewModelScope.launch {

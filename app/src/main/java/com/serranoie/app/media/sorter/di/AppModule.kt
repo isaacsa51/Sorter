@@ -9,7 +9,7 @@ import com.serranoie.app.media.sorter.domain.settings.GetAppSettingsUseCase
 import com.serranoie.app.media.sorter.domain.settings.UpdateSettingsUseCase
 import com.serranoie.app.media.sorter.presentation.mapper.MediaFileMapper
 import com.serranoie.app.media.sorter.presentation.model.MediaFileUi
-import com.serranoie.app.media.sorter.util.MediaFileFormatter
+import com.serranoie.app.media.sorter.presentation.mapper.MediaFileFormatter
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

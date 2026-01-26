@@ -40,6 +40,8 @@ import ir.mahozad.multiplatform.wavyslider.WaveDirection
 import ir.mahozad.multiplatform.wavyslider.material3.WavySlider as WavySlider3
 import com.serranoie.app.media.sorter.ui.theme.util.DevicePreview
 import com.serranoie.app.media.sorter.ui.theme.util.PreviewWrapper
+import com.serranoie.app.media.sorter.ui.theme.AureaSpacing
+import com.serranoie.app.media.sorter.ui.theme.SpacingLevel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class)
@@ -60,6 +62,7 @@ fun SorterMediaScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    val spacing = AureaSpacing.current
     
     var videoProgress by remember { mutableStateOf(0f) }
     var isVideoPlaying by remember { mutableStateOf(autoPlayVideos) }
@@ -141,7 +144,7 @@ fun SorterMediaScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .align(Alignment.TopCenter)
-                                .padding(top = trashIconOffset.coerceAtLeast(0f).dp + 24.dp)
+                                .padding(top = trashIconOffset.coerceAtLeast(0f).dp + spacing.S)
                                 .zIndex(3f),
                             contentAlignment = Alignment.TopCenter
                         ) {
@@ -159,7 +162,7 @@ fun SorterMediaScreen(
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(16.dp),
+                                .padding(spacing.S),
                             contentAlignment = Alignment.Center
                         ) {
 	                        SwipeableCard(
@@ -229,7 +232,7 @@ fun SorterMediaScreen(
 					                        modifier = Modifier
 						                        .zIndex(1f)
 						                        .align(Alignment.TopStart)
-						                        .padding(12.dp)
+						                        .padding(spacing.S)
 				                        )
 
 				                        if (currentFile.mediaType == "video") {
@@ -366,7 +369,7 @@ fun SorterMediaScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .align(Alignment.BottomCenter)
-                                .padding(bottom = keepIconOffset.coerceAtLeast(0f).dp + 80.dp)
+                                .padding(bottom = keepIconOffset.coerceAtLeast(0f).dp + spacing.XL + spacing.XL)
                                 .zIndex(3f), contentAlignment = Alignment.BottomCenter
                         ) {
 	                        GestureIndicator(
