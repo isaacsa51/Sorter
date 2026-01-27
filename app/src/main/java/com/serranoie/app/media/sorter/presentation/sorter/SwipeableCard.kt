@@ -219,7 +219,7 @@ private fun SwipeableCardPreview() {
             cardContent = {
                 Box(modifier = Modifier.fillMaxSize()) {
                     Image(
-                        painter = painterResource(id = R.drawable.demo_image),
+                        painter = painterResource(id = R.drawable.img_mock_protrait_tutorial),
                         contentDescription = null,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
