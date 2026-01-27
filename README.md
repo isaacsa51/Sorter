@@ -1,7 +1,7 @@
 # Sorter
 
 <p align="center">
-  <img src="assets/icon.png" alt="App Icon" width="128"/>
+  <img src="assets/app_icon.webp" alt="App Icon" width="128"/>
 </p>
 
 <p align="center">
@@ -10,10 +10,12 @@
 </p>
 
 <p align="center">
-  <img src="assets/screenshot1.jpg" alt="Screenshot 1" width="200" style="border-radius:26px;"/>
-  <img src="assets/screenshot2.jpg" alt="Screenshot 2" width="200" style="border-radius:26px;"/>
-  <img src="assets/screenshot3.jpg" alt="Screenshot 3" width="200" style="border-radius:26px;"/>
-  <img src="assets/screenshot4.jpg" alt="Screenshot 4" width="200" style="border-radius:26px;"/>
+  <img src="assets/screenshot_2.png" alt="Screenshot 1" width="200" style="border-radius:26px;"/>
+  <img src="assets/screenshot_3.png" alt="Screenshot 2" width="200" style="border-radius:26px;"/>
+  <img src="assets/screenshot_4.png" alt="Screenshot 3" width="200" style="border-radius:26px;"/>
+  <img src="assets/screenshot_5.png" alt="Screenshot 4" width="200" style="border-radius:26px;"/>
+  <img src="assets/screenshot_6.png" alt="Screenshot 5" width="200" style="border-radius:26px;"/>
+
 </p>
 
 > This app solves the common problem of cluttered photo galleries by
@@ -22,8 +24,8 @@
 
 ---
 
-
 ### Core Features
+
 - Swipe-Based Sorting: Swipe down to keep photos/videos, swipe up to delete
 - Review System: Preview deleted items in a zoomable grid before permanent deletion
 - Advanced Media Viewer: Pinch-to-zoom images, play videos with progress control, fullscreen mode
@@ -32,17 +34,18 @@
 - Undo & Batch Actions: Restore individual items or delete all at once
 
 ### Technical Highlights
-| Category | Technology |
-|----------|------------|
-| **Language** | [Kotlin](https://kotlinlang.org/) 100% |
-| **UI Framework** | [Jetpack Compose](https://developer.android.com/jetpack/compose) |
-| **Design System** | [Material Design 3](https://m3.material.io/) |
-| **Architecture** | MVVM with StateFlow/SharedFlow |
-| **DI** | [Hilt](https://dagger.dev/hilt/) |
-| **Database** | [DataStore](https://developer.android.com/jetpack/androidx/releases/datastore) |
-| **Image Loading** | [Coil](https://coil-kt.github.io/coil/) |
-| **Zoomable Image Buffer** | [Telephoto](https://github.com/saket/telephoto) |
-| **Async** | Kotlin Coroutines & Flow |
+
+| Category                  | Technology                                                                     |
+|---------------------------|--------------------------------------------------------------------------------|
+| **Language**              | [Kotlin](https://kotlinlang.org/) 100%                                         |
+| **UI Framework**          | [Jetpack Compose](https://developer.android.com/jetpack/compose)               |
+| **Design System**         | [Material Design 3](https://m3.material.io/)                                   |
+| **Architecture**          | MVVM with StateFlow/SharedFlow                                                 |
+| **DI**                    | [Hilt](https://dagger.dev/hilt/)                                               |
+| **Database**              | [DataStore](https://developer.android.com/jetpack/androidx/releases/datastore) |
+| **Image Loading**         | [Coil](https://coil-kt.github.io/coil/)                                        |
+| **Zoomable Image Buffer** | [Telephoto](https://github.com/saket/telephoto)                                |
+| **Async**                 | Kotlin Coroutines & Flow                                                       |
 
 ## Download
 
@@ -52,7 +55,7 @@
   </a>
 </p> -->
 
- > Soon on Play Store and F-Droid
+> Soon on Play Store and F-Droid
 
 ---
 
