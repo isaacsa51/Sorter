@@ -19,6 +19,7 @@ material3 = "1.5.0-alpha11"
 material3Version = "1.4.0"
 media3 = "1.5.0"
 wavySlider = "2.2.0"
+detekt = "1.23.7"
 
 
 [libraries]
@@ -59,4 +60,5 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hiltVersion" }
 room = { id = "androidx.room", version.ref = "roomVersion" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 
