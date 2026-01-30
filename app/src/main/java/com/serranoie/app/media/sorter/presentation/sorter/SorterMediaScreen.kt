@@ -57,7 +57,8 @@ fun SorterMediaScreen(
 	onTrashCurrent: () -> MediaFileUi?,
 	onUndoTrash: () -> Unit,
 	onBackToOnboarding: (() -> Unit)? = null,
-	onNavigateToReview: () -> Unit = {}
+	onNavigateToReview: () -> Unit = {},
+	onNavigateToSettings: () -> Unit = {}
 ) {
 	val snackbarHostState = remember { SnackbarHostState() }
 	val scope = rememberCoroutineScope()
@@ -119,7 +120,8 @@ fun SorterMediaScreen(
 					CompletionScreen(
 						deletedCount = deletedCount,
 						onReviewDeleted = onNavigateToReview,
-						onBackToTutorial = onBackToOnboarding
+						onBackToTutorial = onBackToOnboarding,
+						onSettings = onNavigateToSettings
 					)
 				} else {
 					AnimatedVisibility(
@@ -457,6 +459,7 @@ fun SorterMediaScreenPreview() {
 			onTrashCurrent = { null },
 			onUndoTrash = {},
 			onBackToOnboarding = {},
-			onNavigateToReview = {})
+			onNavigateToReview = {},
+			onNavigateToSettings = {})
 	}
 }

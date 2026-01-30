@@ -6,13 +6,16 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.serranoie.app.media.sorter.R
 import com.serranoie.app.media.sorter.ui.theme.SorterTheme
 import com.serranoie.app.media.sorter.ui.theme.util.DevicePreview
 
@@ -22,6 +25,7 @@ import com.serranoie.app.media.sorter.ui.theme.util.DevicePreview
  * @param deletedCount The number of deleted files
  * @param onReviewDeleted Callback when the review deleted button is clicked
  * @param onBackToTutorial Callback when the back to tutorial button is clicked (null to hide the button)
+ * @param onSettings Callback when the settings button is clicked
  * @param modifier Modifier to be applied to the screen
  */
 @Composable
@@ -29,6 +33,7 @@ fun CompletionScreen(
 	deletedCount: Int,
 	onReviewDeleted: () -> Unit,
 	onBackToTutorial: (() -> Unit)? = null,
+	onSettings: () -> Unit = {},
 	modifier: Modifier = Modifier
 ) {
 	val colorScheme = MaterialTheme.colorScheme
@@ -59,7 +64,7 @@ fun CompletionScreen(
 			Spacer(modifier = Modifier.height(24.dp))
 
 			Text(
-				text = "All Done!",
+				text = stringResource(R.string.completion_done),
 				style = MaterialTheme.typography.headlineLargeEmphasized,
 				color = colorScheme.onSurface,
 				fontWeight = FontWeight.Bold
@@ -68,7 +73,7 @@ fun CompletionScreen(
 			Spacer(modifier = Modifier.height(8.dp))
 
 			Text(
-				text = "You've sorted all your media files.",
+				text = stringResource(R.string.completion_description),
 				style = MaterialTheme.typography.bodyLargeEmphasized,
 				color = colorScheme.onSurfaceVariant,
 				textAlign = TextAlign.Center
@@ -95,7 +100,7 @@ fun CompletionScreen(
 					)
 					Spacer(modifier = Modifier.width(12.dp))
 					Text(
-						text = "Review Deleted ($deletedCount)",
+						text = stringResource(R.string.completion_btn_review, deletedCount),
 						style = MaterialTheme.typography.labelLarge,
 						fontWeight = FontWeight.Medium
 					)
@@ -111,11 +116,32 @@ fun CompletionScreen(
 						.height(56.dp)
 				) {
 					Text(
-						text = "Back to Tutorial",
+						text = stringResource(R.string.completion_btn_tutorial),
 						style = MaterialTheme.typography.labelLarge,
 						fontWeight = FontWeight.Medium
 					)
 				}
+				Spacer(modifier = Modifier.height(12.dp))
+			}
+
+			// Settings button - always visible
+			OutlinedButton(
+				onClick = onSettings,
+				modifier = Modifier
+					.fillMaxWidth()
+					.height(56.dp)
+			) {
+				Icon(
+					imageVector = Icons.Default.Settings,
+					contentDescription = null,
+					modifier = Modifier.size(20.dp)
+				)
+				Spacer(modifier = Modifier.width(12.dp))
+				Text(
+					text = stringResource(R.string.completion_btn_settings),
+					style = MaterialTheme.typography.labelLarge,
+					fontWeight = FontWeight.Medium
+				)
 			}
 		}
 	}
@@ -125,7 +151,7 @@ fun CompletionScreen(
 @Composable
 private fun CompletionScreenWithDeletedFilesPreview() {
 	SorterTheme {
-		CompletionScreen(deletedCount = 15, onReviewDeleted = {}, onBackToTutorial = {})
+		CompletionScreen(deletedCount = 15, onReviewDeleted = {}, onBackToTutorial = {}, onSettings = {})
 	}
 }
 
@@ -133,6 +159,6 @@ private fun CompletionScreenWithDeletedFilesPreview() {
 @Composable
 private fun CompletionScreenNoDeletedFilesPreview() {
 	SorterTheme() {
-		CompletionScreen(deletedCount = 0, onReviewDeleted = {}, onBackToTutorial = {})
+		CompletionScreen(deletedCount = 0, onReviewDeleted = {}, onBackToTutorial = {}, onSettings = {})
 	}
 }

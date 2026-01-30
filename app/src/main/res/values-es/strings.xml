@@ -122,6 +122,7 @@
     <string name="completion_done">Todo listo!</string>
     <string name="completion_description">Has organizado todos tus archivos</string>
     <string name="completion_btn_tutorial">Ir atrás al tutorial</string>
+    <string name="completion_btn_settings">Ir a Ajustes</string>
     <string name="gesture_keep">Guardar</string>
     <string name="gesture_delete">Borrar</string>
     <string name="media_info_label_file_size">Tamaño del archivo</string>

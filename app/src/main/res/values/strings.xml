@@ -122,6 +122,7 @@
     <string name="completion_description">You\'ve sorted all your media files.</string>
     <string name="completion_btn_review" translatable="false">Review Deleted (%1$d)</string>
     <string name="completion_btn_tutorial">Back to Tutorial</string>
+    <string name="completion_btn_settings">Go to Settings</string>
 
     <!-- Gesture Indicator -->
     <string name="gesture_keep">Keep</string>

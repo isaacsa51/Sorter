@@ -231,6 +231,9 @@ private fun SorterScreen(
 		} else null,
 		onNavigateToReview = {
 			onNavigate(NavigationAction.NavigateTo(Screen.Review))
+		},
+		onNavigateToSettings = {
+			onNavigate(NavigationAction.NavigateTo(Screen.Settings))
 		})
 }
 
