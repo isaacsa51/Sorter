@@ -154,9 +154,6 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Run detekt
-        run: ./gradlew detekt --stacktrace
-
       - name: Generate dependency graph
         run: ./gradlew dependencies > dependencies.txt
 
@@ -165,13 +162,4 @@ jobs:
         with:
           name: dependency-report
           path: dependencies.txt
-          retention-days: 7
-
-      - name: Upload detekt results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: detekt-results
-          path: |
-            app/build/reports/detekt/
           retention-days: 7

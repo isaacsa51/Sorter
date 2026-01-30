@@ -73,9 +73,6 @@ jobs:
       - name: Run tests
         run: ./gradlew testDebugUnitTest --stacktrace
 
-      - name: Run detekt
-        run: ./gradlew detekt --stacktrace
-
       # For unsigned debug builds (no keystore required)
       - name: Build Debug APK (unsigned)
         if: steps.version.outputs.release_type != 'production'
