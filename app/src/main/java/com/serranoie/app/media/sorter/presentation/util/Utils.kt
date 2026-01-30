@@ -4,8 +4,10 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.util.Log
 import android.view.HapticFeedbackConstants
 import android.view.View
 import android.widget.Toast
@@ -24,13 +26,15 @@ object Utils {
 		try {
 			context.startActivity(intent)
 		} catch (exc: ActivityNotFoundException) {
-			exc.printStackTrace()
+			Log.e("Utils", "Failed to open web link: $url. Exception: $exc")
 		}
 	}
 
 
 	fun View.toggleFeedback() {
-		this.performHapticFeedback(HapticFeedbackConstants.TOGGLE_ON)
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+			this.performHapticFeedback(HapticFeedbackConstants.TOGGLE_ON)
+		}
 	}
 
 	fun View.weakHapticFeedback() {
@@ -73,6 +77,7 @@ object Utils {
 		} catch (e: Exception) {
 			// Fallback to basic haptic feedback if custom vibration fails
 			this.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+			Log.e("Utils", "Error performing haptic feedback", e)
 		}
 	}
 

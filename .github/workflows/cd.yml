@@ -1,0 +1,363 @@
+name: CD - Release Pipeline
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'        # Production releases (v1.0.0)
+      - 'v*.*.*-beta*'  # Beta releases (v1.0.0-beta1)
+      - 'v*.*.*-alpha*' # Alpha releases (v1.0.0-alpha1)
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type'
+        required: true
+        type: choice
+        options:
+          - production
+          - beta
+          - alpha
+      version:
+        description: 'Version number (e.g., 1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  build-release:
+    name: Build Release APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      release_type: ${{ steps.version.outputs.release_type }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for changelog generation
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Extract version and type
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+            RELEASE_TYPE="${{ github.event.inputs.release_type }}"
+          else
+            VERSION=${GITHUB_REF#refs/tags/v}
+            if [[ $VERSION == *"alpha"* ]]; then
+              RELEASE_TYPE="alpha"
+            elif [[ $VERSION == *"beta"* ]]; then
+              RELEASE_TYPE="beta"
+            else
+              RELEASE_TYPE="production"
+            fi
+          fi
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "release_type=$RELEASE_TYPE" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION (type: $RELEASE_TYPE)"
+
+      - name: Run tests
+        run: ./gradlew testDebugUnitTest --stacktrace
+
+      - name: Run detekt
+        run: ./gradlew detekt --stacktrace
+
+      # For unsigned debug builds (no keystore required)
+      - name: Build Debug APK (unsigned)
+        if: steps.version.outputs.release_type != 'production'
+        run: ./gradlew assembleDebug --stacktrace
+
+      # For signed release builds (requires keystore setup)
+      - name: Decode Keystore
+        if: steps.version.outputs.release_type == 'production'
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_FILE }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo $KEYSTORE_BASE64 | base64 --decode > $GITHUB_WORKSPACE/keystore.jks
+          else
+            echo "⚠️ No keystore configured, building unsigned release"
+          fi
+
+      - name: Build Release APK (signed)
+        if: steps.version.outputs.release_type == 'production' && secrets.KEYSTORE_FILE != ''
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          ./gradlew assembleRelease \
+            -Pandroid.injected.signing.store.file=$GITHUB_WORKSPACE/keystore.jks \
+            -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
+            -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
+            -Pandroid.injected.signing.key.password=$KEY_PASSWORD \
+            --stacktrace
+
+      - name: Build Release APK (unsigned)
+        if: steps.version.outputs.release_type == 'production' && secrets.KEYSTORE_FILE == ''
+        run: ./gradlew assembleRelease --stacktrace
+
+      - name: Clean up keystore
+        if: always()
+        run: rm -f $GITHUB_WORKSPACE/keystore.jks
+
+      - name: Rename APK
+        run: |
+          cd app/build/outputs/apk
+          if [ "${{ steps.version.outputs.release_type }}" == "production" ]; then
+            mv release/app-release.apk release/Sorter-v${{ steps.version.outputs.version }}.apk || true
+            mv release/app-release-unsigned.apk release/Sorter-v${{ steps.version.outputs.version }}-unsigned.apk || true
+          else
+            mv debug/app-debug.apk debug/Sorter-v${{ steps.version.outputs.version }}-${{ steps.version.outputs.release_type }}.apk || true
+          fi
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sorter-apk-${{ steps.version.outputs.version }}
+          path: |
+            app/build/outputs/apk/release/*.apk
+            app/build/outputs/apk/debug/*.apk
+          retention-days: 90
+
+  create-release:
+    name: Create GitHub Release
+    needs: build-release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download APK
+        uses: actions/download-artifact@v4
+        with:
+          name: sorter-apk-${{ needs.build-release.outputs.version }}
+          path: ./release-artifacts
+
+      - name: Generate changelog from commits
+        id: changelog_commits
+        run: |
+          # Find the previous tag
+          CURRENT_TAG="v${{ needs.build-release.outputs.version }}"
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          
+          echo "Current tag: $CURRENT_TAG"
+          echo "Previous tag: $PREVIOUS_TAG"
+          
+          # Generate commit log
+          if [ -z "$PREVIOUS_TAG" ]; then
+            COMMITS=$(git log --pretty=format:"- %s (%h)" --reverse)
+          else
+            COMMITS=$(git log --pretty=format:"- %s (%h)" --reverse $PREVIOUS_TAG..HEAD)
+          fi
+          
+          # Save to multiline output
+          {
+            echo 'commits<<EOF'
+            echo "$COMMITS"
+            echo 'EOF'
+          } >> $GITHUB_OUTPUT
+
+      - name: Generate changelog from PRs
+        id: changelog_prs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Find the previous tag
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          
+          # Get merged PRs since last tag
+          if [ -z "$PREVIOUS_TAG" ]; then
+            # If no previous tag, get all merged PRs from the last 30 days
+            SINCE_DATE=$(date -d "30 days ago" +%Y-%m-%d)
+            PRS=$(gh pr list --state merged --limit 100 --json number,title,author,mergedAt \
+              --jq ".[] | select(.mergedAt >= \"$SINCE_DATE\") | \"- \(.title) (#\(.number)) by @\(.author.login)\"" | sort)
+          else
+            # Get the date of the previous tag
+            TAG_DATE=$(git log -1 --format=%aI $PREVIOUS_TAG)
+            PRS=$(gh pr list --state merged --limit 100 --json number,title,author,mergedAt \
+              --jq ".[] | select(.mergedAt >= \"$TAG_DATE\") | \"- \(.title) (#\(.number)) by @\(.author.login)\"" | sort)
+          fi
+          
+          # Save to multiline output
+          {
+            echo 'prs<<EOF'
+            echo "$PRS"
+            echo 'EOF'
+          } >> $GITHUB_OUTPUT
+
+      - name: Categorize changes
+        id: categorize
+        run: |
+          # Categorize commits by type
+          FEATURES=$(echo "${{ steps.changelog_commits.outputs.commits }}" | grep -iE "^- (feat|feature)" || echo "")
+          FIXES=$(echo "${{ steps.changelog_commits.outputs.commits }}" | grep -iE "^- (fix|bugfix)" || echo "")
+          IMPROVEMENTS=$(echo "${{ steps.changelog_commits.outputs.commits }}" | grep -iE "^- (improve|enhance|refactor|perf)" || echo "")
+          DOCS=$(echo "${{ steps.changelog_commits.outputs.commits }}" | grep -iE "^- (docs|documentation)" || echo "")
+          OTHERS=$(echo "${{ steps.changelog_commits.outputs.commits }}" | grep -viE "^- (feat|feature|fix|bugfix|improve|enhance|refactor|perf|docs|documentation)" || echo "")
+          
+          # Save categorized changes
+          {
+            echo 'features<<EOF'
+            echo "$FEATURES"
+            echo 'EOF'
+          } >> $GITHUB_OUTPUT
+          
+          {
+            echo 'fixes<<EOF'
+            echo "$FIXES"
+            echo 'EOF'
+          } >> $GITHUB_OUTPUT
+          
+          {
+            echo 'improvements<<EOF'
+            echo "$IMPROVEMENTS"
+            echo 'EOF'
+          } >> $GITHUB_OUTPUT
+          
+          {
+            echo 'docs<<EOF'
+            echo "$DOCS"
+            echo 'EOF'
+          } >> $GITHUB_OUTPUT
+          
+          {
+            echo 'others<<EOF'
+            echo "$OTHERS"
+            echo 'EOF'
+          } >> $GITHUB_OUTPUT
+
+      - name: Build release notes
+        id: release_notes
+        run: |
+          RELEASE_TYPE="${{ needs.build-release.outputs.release_type }}"
+          VERSION="${{ needs.build-release.outputs.version }}"
+          
+          # Build the release notes
+          {
+            echo 'notes<<EOF'
+            
+            if [ "$RELEASE_TYPE" == "alpha" ]; then
+              echo "## 🔬 Alpha Release v$VERSION"
+              echo ""
+              echo "> ⚠️ **Warning**: This is an alpha release intended for testing purposes only. It may contain bugs and unstable features."
+            elif [ "$RELEASE_TYPE" == "beta" ]; then
+              echo "## 🧪 Beta Release v$VERSION"
+              echo ""
+              echo "> ℹ️ **Note**: This is a beta release for early testing. Please report any issues you encounter."
+            else
+              echo "## 🚀 Release v$VERSION"
+            fi
+            
+            echo ""
+            echo "### 📝 What's Changed"
+            echo ""
+            
+            # Add categorized changes
+            if [ -n "${{ steps.categorize.outputs.features }}" ]; then
+              echo "#### ✨ New Features"
+              echo "${{ steps.categorize.outputs.features }}"
+              echo ""
+            fi
+            
+            if [ -n "${{ steps.categorize.outputs.fixes }}" ]; then
+              echo "#### 🐛 Bug Fixes"
+              echo "${{ steps.categorize.outputs.fixes }}"
+              echo ""
+            fi
+            
+            if [ -n "${{ steps.categorize.outputs.improvements }}" ]; then
+              echo "#### 🔧 Improvements"
+              echo "${{ steps.categorize.outputs.improvements }}"
+              echo ""
+            fi
+            
+            if [ -n "${{ steps.categorize.outputs.docs }}" ]; then
+              echo "#### 📚 Documentation"
+              echo "${{ steps.categorize.outputs.docs }}"
+              echo ""
+            fi
+            
+            if [ -n "${{ steps.categorize.outputs.others }}" ]; then
+              echo "#### 🔄 Other Changes"
+              echo "${{ steps.categorize.outputs.others }}"
+              echo ""
+            fi
+            
+            # Add PR list if available
+            if [ -n "${{ steps.changelog_prs.outputs.prs }}" ]; then
+              echo "### 🔀 Merged Pull Requests"
+              echo ""
+              echo "${{ steps.changelog_prs.outputs.prs }}"
+              echo ""
+            fi
+            
+            echo "### 📥 Installation"
+            echo ""
+            echo "Download the APK file below and install it on your Android device."
+            echo ""
+            echo "**Minimum Android Version:** Android 12 (API 31)"
+            echo ""
+            
+            if [ "$RELEASE_TYPE" == "production" ]; then
+              echo "### 🔐 Verification"
+              echo ""
+              echo "This release is signed with our official keystore."
+              echo ""
+            fi
+            
+            echo "---"
+            echo ""
+            echo "**Full Changelog**: https://github.com/${{ github.repository }}/commits/v$VERSION"
+            echo ""
+            echo "🤖 Generated with [Firebender](https://firebender.com)"
+            
+            echo 'EOF'
+          } >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Sorter v${{ needs.build-release.outputs.version }}"
+          tag_name: "v${{ needs.build-release.outputs.version }}"
+          body: ${{ steps.release_notes.outputs.notes }}
+          files: |
+            ./release-artifacts/**/*.apk
+          draft: false
+          prerelease: ${{ needs.build-release.outputs.release_type != 'production' }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Add release summary
+        run: |
+          {
+            echo "## 🎉 Release Created Successfully"
+            echo ""
+            echo "- **Version:** v${{ needs.build-release.outputs.version }}"
+            echo "- **Type:** ${{ needs.build-release.outputs.release_type }}"
+            echo "- **Release URL:** https://github.com/${{ github.repository }}/releases/tag/v${{ needs.build-release.outputs.version }}"
+            echo ""
+            echo "### 📦 Artifacts"
+            ls -lh ./release-artifacts/**/*.apk | awk '{print "- " $9 " (" $5 ")"}'
+          } >> $GITHUB_STEP_SUMMARY

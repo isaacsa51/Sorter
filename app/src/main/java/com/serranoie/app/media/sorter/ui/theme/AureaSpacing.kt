@@ -32,11 +32,11 @@ enum class SpacingLevel {
  * Each level relates to others by the golden ratio φ
  */
 data class PhiSpacing(
-    val XS: Dp,
-    val S: Dp,
-    val M: Dp,
-    val L: Dp,
-    val XL: Dp
+    val xs: Dp,
+    val s: Dp,
+    val m: Dp,
+    val l: Dp,
+    val xl: Dp
 )
 
 /**
@@ -44,11 +44,11 @@ data class PhiSpacing(
  */
 val LocalAureaSpacing = compositionLocalOf {
     PhiSpacing(
-        XS = 6.dp,
-        S = 10.dp,
-        M = 16.dp,
-        L = 26.dp,
-        XL = 42.dp
+        xs = 6.dp,
+        s = 10.dp,
+        m = 16.dp,
+        l = 26.dp,
+        xl = 42.dp
     )
 }
 
@@ -80,11 +80,11 @@ fun AureaScaleProvider(
     
     // Calculate all spacing levels using golden ratio
     val spacing = PhiSpacing(
-        XS = baseUnit / PHI.pow(2),  // ≈ 6.08dp on 360dp screen
-        S = baseUnit / PHI,           // ≈ 9.89dp
-        M = baseUnit,                 // = 16.00dp
-        L = baseUnit * PHI,           // ≈ 25.89dp
-        XL = baseUnit * PHI.pow(2)    // ≈ 41.89dp
+        xs = baseUnit / PHI.pow(2),  // ≈ 6.08dp on 360dp screen
+        s = baseUnit / PHI,           // ≈ 9.89dp
+        m = baseUnit,                 // = 16.00dp
+        l = baseUnit * PHI,           // ≈ 25.89dp
+        xl = baseUnit * PHI.pow(2)    // ≈ 41.89dp
     )
     
     CompositionLocalProvider(
@@ -102,11 +102,11 @@ fun AureaScaleProvider(
 fun SpacingLevel.toDP(): Dp {
     val spacing = LocalAureaSpacing.current
     return when (this) {
-        SpacingLevel.XS -> spacing.XS
-        SpacingLevel.S -> spacing.S
-        SpacingLevel.M -> spacing.M
-        SpacingLevel.L -> spacing.L
-        SpacingLevel.XL -> spacing.XL
+        SpacingLevel.XS -> spacing.xs
+        SpacingLevel.S -> spacing.s
+        SpacingLevel.M -> spacing.m
+        SpacingLevel.L -> spacing.l
+        SpacingLevel.XL -> spacing.xl
     }
 }
 

@@ -27,27 +27,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.serranoie.app.media.sorter.R
 import com.serranoie.app.media.sorter.ui.theme.util.ComponentPreview
 import com.serranoie.app.media.sorter.ui.theme.util.PreviewWrapper
 import com.serranoie.app.media.sorter.ui.theme.AureaSpacing
-
-/**
- * Data class representing file information to be displayed
- */
-data class FileInfo(
-    val fileName: String,
-    val fileInfo: String,
-    val fileSize: String,
-    val dateCreated: String,
-    val modified: String,
-    val dimensions: String,
-    val lastAccessed: String,
-    val path: String
-)
 
 /**
  * Overlay component that displays file information and action buttons at the bottom
@@ -72,7 +60,7 @@ fun MediaInfoOverlay(
     modifier: Modifier = Modifier
 ) {
     val spacing = AureaSpacing.current
-    val cornerRadius = spacing.S
+    val cornerRadius = spacing.s
     
     SharedTransitionLayout(
         modifier = modifier
@@ -89,12 +77,12 @@ fun MediaInfoOverlay(
                         )
                     )
                 )
-                .padding(spacing.L),
+                .padding(spacing.l),
             verticalArrangement = Arrangement.Bottom
         ) {
             if (videoSlider != null && !isExpanded) {
                 videoSlider()
-                Spacer(modifier = Modifier.height(spacing.S))
+                Spacer(modifier = Modifier.height(spacing.s))
             }
             
             Text(
@@ -106,7 +94,7 @@ fun MediaInfoOverlay(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.fillMaxWidth().basicMarquee()
             )
-            Spacer(modifier = Modifier.height(spacing.XS))
+            Spacer(modifier = Modifier.height(spacing.xs))
 
             AnimatedVisibility(
                 visible = !isExpanded,
@@ -149,7 +137,6 @@ fun MediaInfoOverlay(
                 onOpenClick = onOpenClick,
                 onShareClick = onShareClick,
                 onExpandToggle = onExpandToggle,
-                sharedTransitionScope = this@SharedTransitionLayout
             )
         }
     }
@@ -185,28 +172,28 @@ private fun SharedTransitionScope.ExpandedInfoContent(
             tonalElevation = 0.dp
         ) {
             Column(
-                modifier = Modifier.padding(spacing.M)
+                modifier = Modifier.padding(spacing.m)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        InfoItem("File Size", fileInfo.fileSize)
-                        Spacer(modifier = Modifier.height(spacing.M))
-                        InfoItem("Date Created", fileInfo.dateCreated)
-                        Spacer(modifier = Modifier.height(spacing.M))
-                        InfoItem("Modified", fileInfo.modified)
+                        InfoItem(stringResource(R.string.media_info_label_file_size), fileInfo.fileSize)
+                        Spacer(modifier = Modifier.height(spacing.m))
+                        InfoItem(stringResource(R.string.media_info_label_date_created), fileInfo.dateCreated)
+                        Spacer(modifier = Modifier.height(spacing.m))
+                        InfoItem(stringResource(R.string.media_info_label_modified), fileInfo.modified)
                     }
 
-                    Spacer(modifier = Modifier.width(spacing.M))
+                    Spacer(modifier = Modifier.width(spacing.m))
 
                     Column(modifier = Modifier.weight(1f)) {
-                        InfoItem("Dimensions", fileInfo.dimensions)
-                        Spacer(modifier = Modifier.height(spacing.M))
-                        InfoItem("Last Accessed", fileInfo.lastAccessed)
-                        Spacer(modifier = Modifier.height(spacing.M))
-                        InfoItem("Path", fileInfo.path)
+                        InfoItem(stringResource(R.string.media_info_label_dimensions), fileInfo.dimensions)
+                        Spacer(modifier = Modifier.height(spacing.m))
+                        InfoItem(stringResource(R.string.media_info_label_last_accessed), fileInfo.lastAccessed)
+                        Spacer(modifier = Modifier.height(spacing.m))
+                        InfoItem(stringResource(R.string.media_info_label_path), fileInfo.path)
                     }
                 }
             }
@@ -224,7 +211,6 @@ private fun SharedTransitionScope.ActionButtons(
     onOpenClick: () -> Unit,
     onShareClick: () -> Unit,
     onExpandToggle: () -> Unit,
-    sharedTransitionScope: SharedTransitionScope
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -242,12 +228,12 @@ private fun SharedTransitionScope.ActionButtons(
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.OpenInNew,
-                contentDescription = "Open",
+                contentDescription = stringResource(R.string.media_info_btn_open),
                 modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(10.dp))
             Text(
-                text = "Open",
+                text = stringResource(R.string.media_info_btn_open),
                 style = MaterialTheme.typography.labelLargeEmphasized,
                 fontWeight = FontWeight.Medium
             )
@@ -266,7 +252,7 @@ private fun SharedTransitionScope.ActionButtons(
             ) {
                 Icon(
                     imageVector = Icons.Default.Share,
-                    contentDescription = "Share",
+                    contentDescription = stringResource(R.string.content_desc_share),
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -292,7 +278,7 @@ private fun SharedTransitionScope.ActionButtons(
                     } else {
                         Icons.Outlined.Info
                     },
-                    contentDescription = "Info",
+                    contentDescription = stringResource(R.string.content_desc_info),
                     modifier = Modifier.size(20.dp)
                 )
             }

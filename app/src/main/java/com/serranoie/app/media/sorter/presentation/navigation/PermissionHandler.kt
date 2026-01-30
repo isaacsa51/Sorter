@@ -16,13 +16,14 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.core.content.ContextCompat
+import com.serranoie.app.media.sorter.R
 import com.serranoie.app.media.sorter.presentation.sorter.SorterViewModel
 
 @Composable
 fun PermissionHandler(
-    hasPermissions: Boolean,
     showPermissionDialog: Boolean,
     sorterViewModel: SorterViewModel,
     onPermissionsGranted: () -> Unit,
@@ -98,23 +99,21 @@ private fun PermissionDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Storage Permission Required") },
+        title = { Text(stringResource(R.string.permission_dialog_title)) },
         text = {
             Text(
-                "This app needs access to your photos and videos to help you sort them. " +
-                        "Without permission, you'll see sample data only.\n\n" +
-                        "You can grant permission in Settings.",
+                stringResource(R.string.permission_dialog_text),
                 textAlign = TextAlign.Start
             )
         },
         confirmButton = {
             TextButton(onClick = onGoToSettings) {
-                Text("Go to Settings")
+                Text(stringResource(R.string.permission_btn_settings))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Continue with Sample Data")
+                Text(stringResource(R.string.permission_btn_continue))
             }
         }
     )

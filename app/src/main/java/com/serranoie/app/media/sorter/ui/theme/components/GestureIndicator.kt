@@ -24,6 +24,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.ui.res.stringResource
+import com.serranoie.app.media.sorter.R
 
 /**
  * Gesture indicator component that shows feedback when swiping
@@ -106,7 +108,7 @@ private fun GestureIndicatorPreview() {
             GestureIndicator(
                 visible = true,
                 icon = Icons.Default.Delete,
-                text = "Delete",
+                text = stringResource(R.string.gesture_delete),
                 containerColor = MaterialTheme.colorScheme.errorContainer,
                 contentColor = MaterialTheme.colorScheme.error,
                 alpha = 1f,
@@ -128,7 +130,7 @@ private fun GestureIndicatorKeepPreview() {
             GestureIndicator(
                 visible = true,
                 icon = Icons.Default.CheckCircle,
-                text = "Keep",
+                text = stringResource(R.string.gesture_keep),
                 containerColor = Color(0xFF4CAF50),
                 contentColor = MaterialTheme.colorScheme.surface,
                 alpha = 1f,

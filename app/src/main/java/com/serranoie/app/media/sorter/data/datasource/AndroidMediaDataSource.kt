@@ -139,7 +139,7 @@ class AndroidMediaDataSource @Inject constructor(
 							failureCount++
 						}
 					} catch (e: RecoverableSecurityException) {
-						Log.w(TAG, "RecoverableSecurityException for $uri, needs user permission")
+						Log.e(TAG, "RecoverableSecurityException for $uri, needs user permission, exception: $e")
 						pendingUris.add(uri)
 						failureCount++
 					} catch (e: SecurityException) {

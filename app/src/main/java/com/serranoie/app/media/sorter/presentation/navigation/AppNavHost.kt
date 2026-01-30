@@ -1,5 +1,6 @@
 package com.serranoie.app.media.sorter.presentation.navigation
 
+import android.util.Log
 import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
@@ -39,10 +40,50 @@ import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 
-@EntryPoint
-@InstallIn(SingletonComponent::class)
-interface MediaRepositoryEntryPoint {
-	fun mediaRepository(): MediaRepository
+private fun getScreenOrder(screen: Screen): Int {
+	return when (screen) {
+		Screen.Onboard -> 0
+		Screen.Sorter -> 1
+		Screen.Review -> 2
+		Screen.Settings -> 3
+	}
+}
+
+@Composable
+private fun HandlePredictiveBack(
+	enabled: Boolean, backProgress: Animatable<Float, *>, onNavigateBack: () -> Unit
+) {
+	val scope = rememberCoroutineScope()
+
+	PredictiveBackHandler(enabled = enabled) { progress ->
+		try {
+			progress.collect { backEvent ->
+				scope.launch {
+					backProgress.snapTo(backEvent.progress)
+				}
+			}
+			scope.launch {
+				backProgress.animateTo(
+					targetValue = 1f, animationSpec = spring(
+						dampingRatio = Spring.DampingRatioNoBouncy,
+						stiffness = Spring.StiffnessMedium
+					)
+				)
+				backProgress.snapTo(0f)
+			}
+			onNavigateBack()
+		} catch (e: Exception) {
+			scope.launch {
+				backProgress.animateTo(
+					targetValue = 0f, animationSpec = spring(
+						dampingRatio = Spring.DampingRatioNoBouncy,
+						stiffness = Spring.StiffnessMedium
+					)
+				)
+				Log.e("AppNavHost", "Error in PredictiveBackHandler", e)
+			}
+		}
+	}
 }
 
 @Composable
@@ -55,9 +96,6 @@ fun AppNavHost(
 ) {
 	val sorterViewModel: SorterViewModel = hiltViewModel()
 	val settingsViewModel: SettingsViewModel = hiltViewModel()
-	val scope = rememberCoroutineScope()
-
-	// Get repository for ReviewScreen (needed for DeleteMediaHandler)
 	val context = LocalContext.current
 	val repository = remember {
 		EntryPointAccessors.fromApplication<MediaRepositoryEntryPoint>(
@@ -65,55 +103,14 @@ fun AppNavHost(
 		).mediaRepository()
 	}
 
-	val animationDuration = 300
-	val fadeInDuration = 250
-	val fadeOutDuration = 200
-	val slideDistance = 30
-
 	val backProgress = remember { Animatable(0f) }
+	val backEnabled =
+		currentScreen != Screen.Onboard && !(currentScreen == Screen.Sorter && appSettings.tutorialCompleted)
 
-	fun getScreenOrder(screen: Screen): Int {
-		return when (screen) {
-			Screen.Onboard -> 0
-			Screen.Sorter -> 1
-			Screen.Review -> 2
-			Screen.Settings -> 3
-		}
-	}
-
-	val backEnabled = currentScreen != Screen.Onboard &&
-			!(currentScreen == Screen.Sorter && appSettings.tutorialCompleted)
-
-	PredictiveBackHandler(enabled = backEnabled) { progress ->
-		try {
-			progress.collect { backEvent ->
-				scope.launch {
-					backProgress.snapTo(backEvent.progress)
-				}
-			}
-			scope.launch {
-				backProgress.animateTo(
-					targetValue = 1f,
-					animationSpec = spring(
-						dampingRatio = Spring.DampingRatioNoBouncy,
-						stiffness = Spring.StiffnessMedium
-					)
-				)
-				backProgress.snapTo(0f)
-			}
-			onNavigate(NavigationAction.NavigateBack)
-		} catch (e: Exception) {
-			scope.launch {
-				backProgress.animateTo(
-					targetValue = 0f,
-					animationSpec = spring(
-						dampingRatio = Spring.DampingRatioNoBouncy,
-						stiffness = Spring.StiffnessMedium
-					)
-				)
-			}
-		}
-	}
+	HandlePredictiveBack(
+		enabled = backEnabled,
+		backProgress = backProgress,
+		onNavigateBack = { onNavigate(NavigationAction.NavigateBack) })
 
 	Box(
 		modifier = Modifier
@@ -132,132 +129,176 @@ fun AppNavHost(
 					alpha = 1f - (progress * 0.3f)
 				},
 			transitionSpec = {
-				val isForward = getScreenOrder(targetState) > getScreenOrder(initialState)
-
-				if (isForward) {
-					(slideInHorizontally(
-						initialOffsetX = { slideDistance },
-						animationSpec = tween(animationDuration)
-					) + fadeIn(
-						animationSpec = tween(durationMillis = fadeInDuration, delayMillis = 50)
-					)) togetherWith (slideOutHorizontally(
-						targetOffsetX = { -slideDistance },
-						animationSpec = tween(animationDuration)
-					) + fadeOut(
-						animationSpec = tween(durationMillis = fadeOutDuration)
-					))
-				} else {
-					(slideInHorizontally(
-						initialOffsetX = { -slideDistance },
-						animationSpec = tween(animationDuration)
-					) + fadeIn(
-						animationSpec = tween(durationMillis = fadeInDuration, delayMillis = 50)
-					)) togetherWith (slideOutHorizontally(
-						targetOffsetX = { slideDistance },
-						animationSpec = tween(animationDuration)
-					) + fadeOut(
-						animationSpec = tween(durationMillis = fadeOutDuration)
-					))
-				}
+				getScreenTransition(
+					isForward = getScreenOrder(targetState) > getScreenOrder(initialState)
+				)
 			},
 			label = "screen_transition"
 		) { screen ->
 			when (screen) {
-				Screen.Onboard -> {
-					TutorialScreen(
-						onGetStarted = {
-							settingsViewModel.markTutorialCompleted()
+				Screen.Onboard -> OnboardScreen(
+					settingsViewModel = settingsViewModel,
+					hasPermissions = hasPermissions,
+					onRequestPermissions = onRequestPermissions,
+					onNavigate = onNavigate
+				)
 
-							if (hasPermissions) {
-								onNavigate(NavigationAction.NavigateTo(Screen.Sorter))
-							} else {
-								onRequestPermissions()
-								onNavigate(NavigationAction.NavigateTo(Screen.Sorter))
-							}
-						}
-					)
-				}
+				Screen.Sorter -> SorterScreen(
+					sorterViewModel = sorterViewModel,
+					settingsViewModel = settingsViewModel,
+					appSettings = appSettings,
+					onNavigate = onNavigate
+				)
 
-				Screen.Sorter -> {
-					val uiState by sorterViewModel.uiState.collectAsState()
+				Screen.Review -> ReviewScreenWrapper(
+					sorterViewModel = sorterViewModel,
+					repository = repository,
+					appSettings = appSettings,
+					onNavigate = onNavigate
+				)
 
-					SorterMediaScreen(
-						currentFile = uiState.currentFile,
-						isCompleted = uiState.isCompleted,
-						deletedCount = uiState.deletedCount,
-						useBlurredBackground = appSettings.useBlurredBackground,
-						autoPlayVideos = appSettings.autoPlayVideos,
-						onKeepCurrent = { sorterViewModel.keepCurrent() },
-						onTrashCurrent = { sorterViewModel.trashCurrent() },
-						onUndoTrash = { sorterViewModel.undoTrash() },
-						onToggleBackground = { settingsViewModel.toggleBlurredBackground() },
-						onBackToOnboarding = if (!appSettings.tutorialCompleted) {
-							{ onNavigate(NavigationAction.NavigateTo(Screen.Onboard)) }
-						} else null,
-						onNavigateToReview = {
-							onNavigate(NavigationAction.NavigateTo(Screen.Review))
-						}
-					)
-				}
-
-				Screen.Review -> {
-					val uiState by sorterViewModel.uiState.collectAsState()
-
-					ReviewScreen(
-						deletedFiles = uiState.deletedFiles,
-						repository = repository,
-						useTrash = appSettings.syncTrashDeletion,
-						onBack = {
-							onNavigate(NavigationAction.NavigateBack)
-						},
-						onSettings = {
-							onNavigate(NavigationAction.NavigateTo(Screen.Settings))
-						},
-						onInfo = {
-							onNavigate(NavigationAction.NavigateTo(Screen.Settings))
-						},
-						onRemoveItem = { file ->
-							sorterViewModel.removeFromDeleted(file)
-						},
-						onDeleteAll = {
-							sorterViewModel.clearDeletedFilesAfterPermissionGrant()
-						}
-					)
-				}
-
-				Screen.Settings -> {
-					SettingsScreen(
-						appTheme = when (appSettings.themeMode) {
-							ThemeMode.LIGHT -> "Light"
-							ThemeMode.DARK -> "Dark"
-							ThemeMode.SYSTEM -> "System"
-						},
-						isMaterialYouEnabled = appSettings.useDynamicColors,
-						isBlurredBackgroundEnabled = appSettings.useBlurredBackground,
-						isAutoPlayEnabled = appSettings.autoPlayVideos,
-						syncFileToTrashBin = appSettings.syncTrashDeletion,
-						onThemeChange = { theme ->
-							val themeMode = when (theme) {
-								"Light" -> ThemeMode.LIGHT
-								"Dark" -> ThemeMode.DARK
-								else -> ThemeMode.SYSTEM
-							}
-							settingsViewModel.setThemeMode(themeMode)
-						},
-						onMaterialYouToggle = { settingsViewModel.toggleDynamicColors() },
-						onBlurredBackgroundToggle = { settingsViewModel.toggleBlurredBackground() },
-						onAutoPlayToggle = { settingsViewModel.toggleAutoPlayVideos() },
-						onSyncFileToTrashBinToggle = { settingsViewModel.toggleSyncTrashDeletion() },
-						onResetTutorial = {
-							settingsViewModel.resetTutorial()
-							onNavigate(NavigationAction.NavigateTo(Screen.Onboard))
-						},
-						onBack = {
-							onNavigate(NavigationAction.NavigateBack)
-						}
-					)
-				}
+				Screen.Settings -> SettingsScreenWrapper(
+					settingsViewModel = settingsViewModel,
+					appSettings = appSettings,
+					onNavigate = onNavigate
+				)
 			}
 		}
 	}
+}
+
+private fun getScreenTransition(isForward: Boolean) = if (isForward) {
+	(slideInHorizontally(
+		initialOffsetX = { 30 }, animationSpec = tween(300)
+	) + fadeIn(
+		animationSpec = tween(durationMillis = 250, delayMillis = 50)
+	)) togetherWith (slideOutHorizontally(
+		targetOffsetX = { -30 }, animationSpec = tween(300)
+	) + fadeOut(
+		animationSpec = tween(durationMillis = 200)
+	))
+} else {
+	(slideInHorizontally(
+		initialOffsetX = { -30 }, animationSpec = tween(300)
+	) + fadeIn(
+		animationSpec = tween(durationMillis = 250, delayMillis = 50)
+	)) togetherWith (slideOutHorizontally(
+		targetOffsetX = { 30 }, animationSpec = tween(300)
+	) + fadeOut(
+		animationSpec = tween(durationMillis = 200)
+	))
+}
+
+@Composable
+private fun OnboardScreen(
+	settingsViewModel: SettingsViewModel,
+	hasPermissions: Boolean,
+	onRequestPermissions: () -> Unit,
+	onNavigate: (NavigationAction) -> Unit
+) {
+	TutorialScreen(
+		onGetStarted = {
+			settingsViewModel.markTutorialCompleted()
+			if (hasPermissions) {
+				onNavigate(NavigationAction.NavigateTo(Screen.Sorter))
+			} else {
+				onRequestPermissions()
+				onNavigate(NavigationAction.NavigateTo(Screen.Sorter))
+			}
+		})
+}
+
+@Composable
+private fun SorterScreen(
+	sorterViewModel: SorterViewModel,
+	settingsViewModel: SettingsViewModel,
+	appSettings: AppSettings,
+	onNavigate: (NavigationAction) -> Unit
+) {
+	val uiState by sorterViewModel.uiState.collectAsState()
+
+	SorterMediaScreen(
+		currentFile = uiState.currentFile,
+		isCompleted = uiState.isCompleted,
+		deletedCount = uiState.deletedCount,
+		useBlurredBackground = appSettings.useBlurredBackground,
+		autoPlayVideos = appSettings.autoPlayVideos,
+		onKeepCurrent = { sorterViewModel.keepCurrent() },
+		onTrashCurrent = { sorterViewModel.trashCurrent() },
+		onUndoTrash = { sorterViewModel.undoTrash() },
+		onBackToOnboarding = if (!appSettings.tutorialCompleted) {
+			{ onNavigate(NavigationAction.NavigateTo(Screen.Onboard)) }
+		} else null,
+		onNavigateToReview = {
+			onNavigate(NavigationAction.NavigateTo(Screen.Review))
+		},
+		onNavigateToSettings = {
+			onNavigate(NavigationAction.NavigateTo(Screen.Settings))
+		})
+}
+
+@Composable
+private fun ReviewScreenWrapper(
+	sorterViewModel: SorterViewModel,
+	repository: MediaRepository,
+	appSettings: AppSettings,
+	onNavigate: (NavigationAction) -> Unit
+) {
+	val uiState by sorterViewModel.uiState.collectAsState()
+
+	ReviewScreen(
+		deletedFiles = uiState.deletedFiles,
+		repository = repository,
+		useTrash = appSettings.syncTrashDeletion,
+		onBack = { onNavigate(NavigationAction.NavigateBack) },
+		onSettings = { onNavigate(NavigationAction.NavigateTo(Screen.Settings)) },
+		onRemoveItem = { file -> sorterViewModel.removeFromDeleted(file) },
+		onDeleteAll = { sorterViewModel.clearDeletedFilesAfterPermissionGrant() })
+}
+
+@Composable
+private fun SettingsScreenWrapper(
+	settingsViewModel: SettingsViewModel,
+	appSettings: AppSettings,
+	onNavigate: (NavigationAction) -> Unit
+) {
+	SettingsScreen(
+		appTheme = getThemeString(appSettings.themeMode),
+		isMaterialYouEnabled = appSettings.useDynamicColors,
+		isBlurredBackgroundEnabled = appSettings.useBlurredBackground,
+		isAutoPlayEnabled = appSettings.autoPlayVideos,
+		syncFileToTrashBin = appSettings.syncTrashDeletion,
+		onThemeChange = { theme -> settingsViewModel.setThemeMode(getThemeMode(theme)) },
+		onMaterialYouToggle = { settingsViewModel.toggleDynamicColors() },
+		onBlurredBackgroundToggle = { settingsViewModel.toggleBlurredBackground() },
+		onAutoPlayToggle = { settingsViewModel.toggleAutoPlayVideos() },
+		onSyncFileToTrashBinToggle = { settingsViewModel.toggleSyncTrashDeletion() },
+		onResetTutorial = {
+			settingsViewModel.resetTutorial()
+			onNavigate(NavigationAction.NavigateTo(Screen.Onboard))
+		},
+		onResetViewedHistory = { settingsViewModel.resetViewedHistory() },
+		onBack = { onNavigate(NavigationAction.NavigateBack) })
+}
+
+private fun getThemeString(themeMode: ThemeMode): String {
+	return when (themeMode) {
+		ThemeMode.LIGHT -> "Light"
+		ThemeMode.DARK -> "Dark"
+		ThemeMode.SYSTEM -> "System"
+	}
+}
+
+private fun getThemeMode(theme: String): ThemeMode {
+	return when (theme) {
+		"Light" -> ThemeMode.LIGHT
+		"Dark" -> ThemeMode.DARK
+		else -> ThemeMode.SYSTEM
+	}
+}
+
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+interface MediaRepositoryEntryPoint {
+	fun mediaRepository(): MediaRepository
 }

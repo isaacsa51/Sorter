@@ -1,7 +1,10 @@
 package com.serranoie.app.media.sorter.data
 
+import android.content.ContentUris
 import android.net.Uri
 import android.util.Log
+import com.serranoie.app.media.sorter.data.database.ViewedMedia
+import com.serranoie.app.media.sorter.data.database.ViewedMediaDao
 import com.serranoie.app.media.sorter.data.datasource.MediaDataSource
 import com.serranoie.app.media.sorter.domain.AppError
 import com.serranoie.app.media.sorter.domain.Result
@@ -16,7 +19,8 @@ import javax.inject.Singleton
 
 @Singleton
 class SorterMediaRepositoryImpl @Inject constructor(
-	private val mediaDataSource: MediaDataSource
+	private val mediaDataSource: MediaDataSource,
+	private val viewedMediaDao: ViewedMediaDao
 ) : MediaRepository {
 
 	companion object {
@@ -25,6 +29,11 @@ class SorterMediaRepositoryImpl @Inject constructor(
 
 	private var cachedMediaFiles: List<MediaFile>? = null
 	private val cacheMutex = Mutex()
+	
+	// In-memory Set for high-performance filtering
+	private val viewedMediaIds = mutableSetOf<Long>()
+	private val viewedIdsMutex = Mutex()
+	private var isViewedIdsInitialized = false
 
 	override suspend fun fetchMediaFiles(): Result<List<MediaFile>> {
 		return cacheMutex.withLock {
@@ -89,6 +98,91 @@ class SorterMediaRepositoryImpl @Inject constructor(
 	override fun clearCache() {
 		cachedMediaFiles = null
 		Log.d(TAG, "Cache cleared")
+	}
+	
+	override suspend fun getMediaGroupedByDateFiltered(): Result<Map<LocalDate, List<MediaFile>>> {
+		ensureViewedIdsLoaded()
+		
+		return when (val result = fetchMediaFiles()) {
+			is Result.Success -> {
+				viewedIdsMutex.withLock {
+					val filteredMedia = result.data.filter { mediaFile ->
+						val mediaId = extractMediaId(mediaFile.uri)
+						mediaId != null && !viewedMediaIds.contains(mediaId)
+					}
+					
+					val groupedByDate = filteredMedia.groupBy { it.fileDate }
+					Log.d(TAG, "Grouped ${filteredMedia.size} unviewed media into ${groupedByDate.size} dates " +
+							"(filtered out ${result.data.size - filteredMedia.size} viewed items)")
+					groupedByDate.asSuccess()
+				}
+			}
+			is Result.Error -> result
+			is Result.Loading -> Result.Loading
+		}
+	}
+	
+	override suspend fun markAsViewed(mediaId: Long) {
+		viewedIdsMutex.withLock {
+			viewedMediaIds.add(mediaId)
+			
+			viewedMediaDao.insertViewed(ViewedMedia(mediaId = mediaId))
+			
+			Log.d(TAG, "Marked media ID $mediaId as viewed (total viewed: ${viewedMediaIds.size})")
+		}
+	}
+	
+	override suspend fun isViewed(mediaId: Long): Boolean {
+		ensureViewedIdsLoaded()
+		return viewedIdsMutex.withLock {
+			viewedMediaIds.contains(mediaId)
+		}
+	}
+	
+	override suspend fun clearViewedHistory() {
+		viewedIdsMutex.withLock {
+			viewedMediaIds.clear()
+			viewedMediaDao.clearAllViewed()
+			Log.d(TAG, "Cleared all viewed media history")
+		}
+	}
+	
+	override suspend fun getViewedCount(): Int {
+		ensureViewedIdsLoaded()
+		return viewedIdsMutex.withLock {
+			viewedMediaIds.size
+		}
+	}
+	
+	/**
+	 * Ensures the in-memory set of viewed IDs is synchronized with the database.
+	 * Called once on first access.
+	 */
+	private suspend fun ensureViewedIdsLoaded() {
+		if (!isViewedIdsInitialized) {
+			viewedIdsMutex.withLock {
+				if (!isViewedIdsInitialized) {
+					val viewedIds = viewedMediaDao.getAllViewedIds()
+					viewedMediaIds.clear()
+					viewedMediaIds.addAll(viewedIds)
+					isViewedIdsInitialized = true
+					Log.d(TAG, "Loaded ${viewedIds.size} viewed media IDs from database into memory")
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Extracts the media ID from a content URI.
+	 * Content URIs typically have the format: content://media/external/images/media/{id}
+	 */
+	private fun extractMediaId(uri: Uri): Long? {
+		return try {
+			ContentUris.parseId(uri)
+		} catch (e: Exception) {
+			Log.w(TAG, "Failed to extract media ID from URI: $uri", e)
+			null
+		}
 	}
 
 	private suspend fun fetchAndCombineMedia(): Result<List<MediaFile>> {

@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.detekt)
     id("org.jetbrains.kotlin.kapt")
 	id("com.google.dagger.hilt.android")
 }
@@ -86,4 +87,21 @@ dependencies {
 	implementation("com.google.dagger:hilt-android:2.57.1")
 	kapt("com.google.dagger:hilt-android-compiler:2.57.1")
 	implementation(libs.androidx.hilt.navigation.compose)
+}
+
+// Detekt configuration
+detekt {
+    buildUponDefaultConfig = true
+    allRules = false
+    config.setFrom("$projectDir/../detekt.yml")
+    baseline = file("$projectDir/../detekt-baseline.xml")
+}
+
+tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
+    reports {
+        html.required.set(true)
+        xml.required.set(true)
+        txt.required.set(false)
+        sarif.required.set(false)
+    }
 }

@@ -1,6 +1,8 @@
 package com.serranoie.app.media.sorter.presentation.sorter
 
+import android.R.attr.spacing
 import android.content.Intent
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -54,19 +56,19 @@ fun SorterMediaScreen(
 	onKeepCurrent: () -> Unit,
 	onTrashCurrent: () -> MediaFileUi?,
 	onUndoTrash: () -> Unit,
-	onToggleBackground: () -> Unit,
 	onBackToOnboarding: (() -> Unit)? = null,
-	onNavigateToReview: () -> Unit = {}
+	onNavigateToReview: () -> Unit = {},
+	onNavigateToSettings: () -> Unit = {}
 ) {
 	val snackbarHostState = remember { SnackbarHostState() }
 	val scope = rememberCoroutineScope()
 	val context = LocalContext.current
+	val colorScheme = MaterialTheme.colorScheme
 	val spacing = AureaSpacing.current
 
 	var videoProgress by remember { mutableStateOf(0f) }
 	var isVideoPlaying by remember { mutableStateOf(autoPlayVideos) }
 	var seekToProgress by remember { mutableStateOf<Float?>(null) }
-	val colorScheme = MaterialTheme.colorScheme
 	var keepProgress by remember { mutableFloatStateOf(0f) }
 	var trashProgress by remember { mutableStateOf(0f) }
 	var isInfoExpanded by remember { mutableStateOf(false) }
@@ -81,17 +83,13 @@ fun SorterMediaScreen(
 		seekToProgress = null
 	}
 
+	// Animated values for gesture indicators
 	val keepIconAlpha = animateFloatAsState(keepProgress, animationSpec = tween(240)).value
-	val keepIconScale =
-		animateFloatAsState(0.7f + 0.5f * keepProgress, animationSpec = tween(240)).value
-	val keepIconOffset =
-		animateFloatAsState((-32f + 60f * keepProgress), animationSpec = tween(240)).value
-
+	val keepIconScale = animateFloatAsState(0.7f + 0.5f * keepProgress, animationSpec = tween(240)).value
+	val keepIconOffset = animateFloatAsState((-32f + 60f * keepProgress), animationSpec = tween(240)).value
 	val trashIconAlpha = animateFloatAsState(trashProgress, animationSpec = tween(240)).value
-	val trashIconScale =
-		animateFloatAsState(0.7f + 0.5f * trashProgress, animationSpec = tween(240)).value
-	val trashIconOffset =
-		animateFloatAsState((32f - 60f * trashProgress), animationSpec = tween(240)).value
+	val trashIconScale = animateFloatAsState(0.7f + 0.5f * trashProgress, animationSpec = tween(240)).value
+	val trashIconOffset = animateFloatAsState((32f - 60f * trashProgress), animationSpec = tween(240)).value
 
 	Scaffold(
 		modifier = Modifier.fillMaxSize(),
@@ -122,12 +120,12 @@ fun SorterMediaScreen(
 					CompletionScreen(
 						deletedCount = deletedCount,
 						onReviewDeleted = onNavigateToReview,
-						onBackToTutorial = onBackToOnboarding
+						onBackToTutorial = onBackToOnboarding,
+						onSettings = onNavigateToSettings
 					)
 				} else {
 					AnimatedVisibility(
-						visible = true,
-						modifier = Modifier.fillMaxSize()
+						visible = true, modifier = Modifier.fillMaxSize()
 					) {
 						Box(modifier = Modifier.fillMaxSize()) {
 							GestureGradient(
@@ -143,9 +141,8 @@ fun SorterMediaScreen(
 								modifier = Modifier
 									.fillMaxWidth()
 									.align(Alignment.TopCenter)
-									.padding(top = trashIconOffset.coerceAtLeast(0f).dp + spacing.S)
-									.zIndex(3f),
-								contentAlignment = Alignment.TopCenter
+									.padding(top = trashIconOffset.coerceAtLeast(0f).dp + spacing.s)
+									.zIndex(3f), contentAlignment = Alignment.TopCenter
 							) {
 								GestureIndicator(
 									visible = trashIconAlpha > 0.01f,
@@ -161,7 +158,7 @@ fun SorterMediaScreen(
 							Box(
 								modifier = Modifier
 									.fillMaxSize()
-									.padding(spacing.S),
+									.padding(spacing.s),
 								contentAlignment = Alignment.Center
 							) {
 								SwipeableCard(
@@ -222,15 +219,14 @@ fun SorterMediaScreen(
 															}
 														} while (event.changes.any { it.pressed })
 													}
-												}
-										) {
+												}) {
 											MediaTypeBadge(
 												mediaType = currentFile.mediaType,
 												fileName = currentFile.fileName,
 												modifier = Modifier
 													.zIndex(1f)
 													.align(Alignment.TopStart)
-													.padding(spacing.S)
+													.padding(spacing.s)
 											)
 
 											if (currentFile.mediaType == "video") {
@@ -264,15 +260,15 @@ fun SorterMediaScreen(
 
 											MediaInfoOverlay(
 												fileInfo = FileInfo(
-													fileName = currentFile.fileName,
-													fileInfo = currentFile.fileInfo,
-													fileSize = currentFile.fileSize,
-													dateCreated = currentFile.dateCreated,
-													modified = currentFile.modified,
-													dimensions = currentFile.dimensions,
-													lastAccessed = currentFile.lastAccessed,
-													path = currentFile.path
-												),
+												fileName = currentFile.fileName,
+												fileInfo = currentFile.fileInfo,
+												fileSize = currentFile.fileSize,
+												dateCreated = currentFile.dateCreated,
+												modified = currentFile.modified,
+												dimensions = currentFile.dimensions,
+												lastAccessed = currentFile.lastAccessed,
+												path = currentFile.path
+											),
 												isExpanded = isInfoExpanded,
 												onExpandToggle = {
 													isInfoExpanded = !isInfoExpanded
@@ -293,8 +289,7 @@ fun SorterMediaScreen(
 																	addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
 																}
 															val chooser = Intent.createChooser(
-																intent,
-																"Open with"
+																intent, "Open with"
 															)
 															context.startActivity(chooser)
 														} catch (e: Exception) {
@@ -304,6 +299,11 @@ fun SorterMediaScreen(
 																	duration = SnackbarDuration.Short
 																)
 															}
+															Log.e(
+																"SorterMediaScreen",
+																"Error opening file",
+																e
+															)
 														}
 													}
 												},
@@ -320,14 +320,12 @@ fun SorterMediaScreen(
 																			}
 																		}
 																	putExtra(
-																		Intent.EXTRA_STREAM,
-																		uri
+																		Intent.EXTRA_STREAM, uri
 																	)
 																	addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
 																}
 															val chooser = Intent.createChooser(
-																intent,
-																"Share via"
+																intent, "Share via"
 															)
 															context.startActivity(chooser)
 														} catch (e: Exception) {
@@ -337,6 +335,11 @@ fun SorterMediaScreen(
 																	duration = SnackbarDuration.Short
 																)
 															}
+															Log.e(
+																"SorterMediaScreen",
+																"Error sharing file",
+																e
+															)
 														}
 													}
 												},
@@ -366,8 +369,7 @@ fun SorterMediaScreen(
 												} else null,
 												modifier = Modifier
 													.align(Alignment.BottomStart)
-													.zIndex(2f)
-											)
+													.zIndex(2f))
 										}
 									})
 							}
@@ -385,7 +387,7 @@ fun SorterMediaScreen(
 								modifier = Modifier
 									.fillMaxWidth()
 									.align(Alignment.BottomCenter)
-									.padding(bottom = keepIconOffset.coerceAtLeast(0f).dp + spacing.XL + spacing.XL)
+									.padding(bottom = keepIconOffset.coerceAtLeast(0f).dp + spacing.xl + spacing.xl)
 									.zIndex(3f), contentAlignment = Alignment.BottomCenter
 							) {
 								GestureIndicator(
@@ -403,7 +405,6 @@ fun SorterMediaScreen(
 								date = currentFile.date,
 								deletedCount = deletedCount,
 								useBlurredBackground = useBlurredBackground,
-								onToggleBackground = onToggleBackground,
 								onNavigateToReview = onNavigateToReview,
 								modifier = Modifier
 									.align(Alignment.TopStart)
@@ -457,9 +458,8 @@ fun SorterMediaScreenPreview() {
 			onKeepCurrent = {},
 			onTrashCurrent = { null },
 			onUndoTrash = {},
-			onToggleBackground = {},
 			onBackToOnboarding = {},
-			onNavigateToReview = {}
-		)
+			onNavigateToReview = {},
+			onNavigateToSettings = {})
 	}
 }

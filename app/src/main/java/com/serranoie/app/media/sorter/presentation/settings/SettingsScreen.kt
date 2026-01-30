@@ -1,41 +1,60 @@
 package com.serranoie.app.media.sorter.presentation.settings
 
-import android.view.View
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Brightness4
+import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Policy
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.rounded.Storage
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import com.serranoie.app.media.sorter.R
 import com.serranoie.app.media.sorter.presentation.util.Utils
 import com.serranoie.app.media.sorter.presentation.util.Utils.strongHapticFeedback
 import com.serranoie.app.media.sorter.presentation.util.Utils.toggleFeedback
 import com.serranoie.app.media.sorter.presentation.util.Utils.weakHapticFeedback
 import com.serranoie.app.media.sorter.ui.theme.AureaSpacing
-import com.serranoie.app.media.sorter.ui.theme.SorterTheme
 import com.serranoie.app.media.sorter.ui.theme.components.CustomPaddedExpandableItem
 import com.serranoie.app.media.sorter.ui.theme.components.CustomPaddedListItem
-import com.serranoie.app.media.sorter.ui.theme.components.CustomSettingsItem
-import com.serranoie.app.media.sorter.ui.theme.components.FlexibleListGroup
 import com.serranoie.app.media.sorter.ui.theme.components.PaddedListGroup
 import com.serranoie.app.media.sorter.ui.theme.components.PaddedListItemPosition
 import com.serranoie.app.media.sorter.ui.theme.util.DevicePreview
@@ -55,6 +74,7 @@ fun SettingsScreen(
 	onAutoPlayToggle: () -> Unit,
 	onSyncFileToTrashBinToggle: () -> Unit = {},
 	onResetTutorial: () -> Unit = {},
+	onResetViewedHistory: () -> Unit = {},
 	onBack: () -> Unit = {}
 ) {
 	var showThemeDialog by remember { mutableStateOf(false) }
@@ -71,13 +91,13 @@ fun SettingsScreen(
 			LargeTopAppBar(
 				title = {
 					Text(
-						text = "Settings",
+						text = stringResource(R.string.settings_title),
 						style = MaterialTheme.typography.titleLargeEmphasized,
 					)
 				}, navigationIcon = {
 					IconButton(onClick = onBack) {
 						Icon(
-							imageVector = Icons.Default.ArrowBack, contentDescription = "Back"
+							imageVector = Icons.Default.ArrowBack, contentDescription = stringResource(R.string.content_desc_back)
 						)
 					}
 				}, colors = TopAppBarDefaults.topAppBarColors(
@@ -90,11 +110,11 @@ fun SettingsScreen(
 			modifier = Modifier
 				.fillMaxSize()
 				.padding(paddingValues),
-			contentPadding = PaddingValues(bottom = aureaSpacing.M)
+			contentPadding = PaddingValues(bottom = aureaSpacing.m)
 		) {
 			item {
 				PaddedListGroup(
-					title = "Appearance"
+					title = stringResource(R.string.settings_appearance_title)
 				) {
 					CustomPaddedListItem(
 						onClick = {
@@ -107,15 +127,15 @@ fun SettingsScreen(
 							contentDescription = null,
 							tint = MaterialTheme.colorScheme.primary
 						)
-						Spacer(modifier = Modifier.width(aureaSpacing.M))
+						Spacer(modifier = Modifier.width(aureaSpacing.m))
 						Column(modifier = Modifier.weight(1f)) {
 							Text(
-								text = "App Theme",
+								text = stringResource(R.string.settings_theme_title),
 								style = MaterialTheme.typography.bodyLarge,
 								color = MaterialTheme.colorScheme.onSurface
 							)
 							Text(
-								text = "Choose your preferred theme",
+								text = stringResource(R.string.settings_theme_description),
 								style = MaterialTheme.typography.bodySmall,
 								color = MaterialTheme.colorScheme.onSurfaceVariant
 							)
@@ -135,15 +155,15 @@ fun SettingsScreen(
 							contentDescription = null,
 							tint = MaterialTheme.colorScheme.primary
 						)
-						Spacer(modifier = Modifier.width(aureaSpacing.M))
+						Spacer(modifier = Modifier.width(aureaSpacing.m))
 						Column(modifier = Modifier.weight(1f)) {
 							Text(
-								text = "Material You",
+								text = stringResource(R.string.settings_material_you_title),
 								style = MaterialTheme.typography.bodyLarge,
 								color = MaterialTheme.colorScheme.onSurface
 							)
 							Text(
-								text = "Dynamic colors from wallpaper",
+								text = stringResource(R.string.settings_material_you_description),
 								style = MaterialTheme.typography.bodySmall,
 								color = MaterialTheme.colorScheme.onSurfaceVariant
 							)
@@ -166,21 +186,21 @@ fun SettingsScreen(
 							contentDescription = null,
 							tint = MaterialTheme.colorScheme.primary
 						)
-						Spacer(modifier = Modifier.width(aureaSpacing.M))
+						Spacer(modifier = Modifier.width(aureaSpacing.m))
 						Column(modifier = Modifier.weight(1f)) {
 							Text(
-								text = "Background Mode",
+								text = stringResource(R.string.settings_bg_mode_title),
 								style = MaterialTheme.typography.bodyLarge,
 								color = MaterialTheme.colorScheme.onSurface
 							)
 							Text(
-								text = "Sorter screen background style",
+								text = stringResource(R.string.settings_bg_mode_description),
 								style = MaterialTheme.typography.bodySmall,
 								color = MaterialTheme.colorScheme.onSurfaceVariant
 							)
 						}
 						Text(
-							text = if (isBlurredBackgroundEnabled) "Blurred" else "Solid",
+							text = if (isBlurredBackgroundEnabled) stringResource(R.string.settings_bg_mode_blurred) else stringResource(R.string.settings_bg_mode_solid),
 							style = MaterialTheme.typography.labelLarge,
 							color = MaterialTheme.colorScheme.primary
 						)
@@ -190,25 +210,25 @@ fun SettingsScreen(
 
 			item {
 				PaddedListGroup(
-					title = "Playback"
+					title = stringResource(R.string.settings_behaviour_title)
 				) {
 					CustomPaddedListItem(
-						onClick = onAutoPlayToggle, position = PaddedListItemPosition.Single
+						onClick = onAutoPlayToggle, position = PaddedListItemPosition.First
 					) {
 						Icon(
 							imageVector = Icons.Default.PlayArrow,
 							contentDescription = null,
 							tint = MaterialTheme.colorScheme.primary
 						)
-						Spacer(modifier = Modifier.width(aureaSpacing.M))
+						Spacer(modifier = Modifier.width(aureaSpacing.m))
 						Column(modifier = Modifier.weight(1f)) {
 							Text(
-								text = "Auto-Play Videos",
+								text = stringResource(R.string.settings_autoplay_title),
 								style = MaterialTheme.typography.bodyLarge,
 								color = MaterialTheme.colorScheme.onSurface
 							)
 							Text(
-								text = "Automatically play videos when reviewing",
+								text = stringResource(R.string.settings_autoplay_description),
 								style = MaterialTheme.typography.bodySmall,
 								color = MaterialTheme.colorScheme.onSurfaceVariant
 							)
@@ -219,12 +239,38 @@ fun SettingsScreen(
 								view.toggleFeedback()
 							})
 					}
+					
+					CustomPaddedListItem(
+						onClick = {
+							onResetViewedHistory()
+							view.strongHapticFeedback()
+						}, position = PaddedListItemPosition.Last
+					) {
+						Icon(
+							imageVector = Icons.Default.Refresh,
+							contentDescription = null,
+							tint = MaterialTheme.colorScheme.primary
+						)
+						Spacer(modifier = Modifier.width(aureaSpacing.m))
+						Column(modifier = Modifier.weight(1f)) {
+							Text(
+								text = stringResource(R.string.settings_reset_viewed_history_title),
+								style = MaterialTheme.typography.bodyLarge,
+								color = MaterialTheme.colorScheme.onSurface
+							)
+							Text(
+								text = stringResource(R.string.settings_reset_viewed_history_description),
+								style = MaterialTheme.typography.bodySmall,
+								color = MaterialTheme.colorScheme.onSurfaceVariant
+							)
+						}
+					}
 				}
 			}
 
 			item {
 				PaddedListGroup(
-					title = "Storage"
+					title = stringResource(R.string.settings_storage_title)
 				) {
 					CustomPaddedExpandableItem(
 						isExpanded = isStorageInfoExpanded,
@@ -239,16 +285,16 @@ fun SettingsScreen(
 								contentDescription = null,
 								tint = MaterialTheme.colorScheme.primary
 							)
-							Spacer(modifier = Modifier.width(aureaSpacing.M))
+							Spacer(modifier = Modifier.width(aureaSpacing.m))
 
 							Column(modifier = Modifier.weight(1f)) {
 								Text(
-									text = "Sync media deletion",
+									text = stringResource(R.string.settings_sync_deletion_title),
 									style = MaterialTheme.typography.bodyLarge,
 									color = MaterialTheme.colorScheme.onSurface
 								)
 								Text(
-									text = "Tap to learn more",
+									text = stringResource(R.string.settings_sync_deletion_description),
 									style = MaterialTheme.typography.bodySmall,
 									color = MaterialTheme.colorScheme.onSurfaceVariant
 								)
@@ -257,32 +303,32 @@ fun SettingsScreen(
 								checked = syncFileToTrashBin, onCheckedChange = {
 									onSyncFileToTrashBinToggle()
 									view.toggleFeedback()
-								}, modifier = Modifier.padding(end = aureaSpacing.XS)
+								}, modifier = Modifier.padding(end = aureaSpacing.xs)
 							)
 						},
 						expandedContent = {
-							HorizontalDivider(modifier = Modifier.padding(vertical = aureaSpacing.XS))
+							HorizontalDivider(modifier = Modifier.padding(vertical = aureaSpacing.xs))
 
 							Column(
 								modifier = Modifier
 									.fillMaxWidth()
 									.padding(
-										horizontal = aureaSpacing.XS, vertical = aureaSpacing.S
+										horizontal = aureaSpacing.xs, vertical = aureaSpacing.s
 									)
 							) {
 								Row(
-									modifier = Modifier.padding(bottom = aureaSpacing.S),
+									modifier = Modifier.padding(bottom = aureaSpacing.s),
 									verticalAlignment = Alignment.CenterVertically
 								) {
 									Icon(
 										imageVector = Icons.Outlined.Info,
-										contentDescription = "Information",
+										contentDescription = stringResource(R.string.content_desc_info),
 										tint = MaterialTheme.colorScheme.primary,
-										modifier = Modifier.size(aureaSpacing.M)
+										modifier = Modifier.size(aureaSpacing.m)
 									)
-									Spacer(modifier = Modifier.width(aureaSpacing.XS))
+									Spacer(modifier = Modifier.width(aureaSpacing.xs))
 									Text(
-										text = "About this feature",
+										text = stringResource(R.string.settings_sync_deletion_about),
 										style = MaterialTheme.typography.labelLarge,
 										color = MaterialTheme.colorScheme.primary,
 										fontWeight = FontWeight.SemiBold
@@ -290,30 +336,30 @@ fun SettingsScreen(
 								}
 
 								Text(
-									text = "When enabled (Android 11+):",
+									text = stringResource(R.string.settings_sync_deletion_enabled_label),
 									style = MaterialTheme.typography.bodyMedium,
 									fontWeight = FontWeight.SemiBold,
 									color = MaterialTheme.colorScheme.onSurface,
-									modifier = Modifier.padding(bottom = aureaSpacing.XS)
+									modifier = Modifier.padding(bottom = aureaSpacing.xs)
 								)
 
 								Text(
-									text = "• Files move to your phone's Trash Bin\n• Automatically deleted after 30 days\n• Can be recovered before permanent deletion",
+									text = stringResource(R.string.settings_sync_deletion_enabled_desc),
 									style = MaterialTheme.typography.bodySmall,
 									color = MaterialTheme.colorScheme.onSurfaceVariant,
-									modifier = Modifier.padding(bottom = aureaSpacing.M)
+									modifier = Modifier.padding(bottom = aureaSpacing.m)
 								)
 
 								Text(
-									text = "When disabled:",
+									text = stringResource(R.string.settings_sync_deletion_disabled_label),
 									style = MaterialTheme.typography.bodyMedium,
 									fontWeight = FontWeight.SemiBold,
 									color = MaterialTheme.colorScheme.onSurface,
-									modifier = Modifier.padding(bottom = aureaSpacing.XS)
+									modifier = Modifier.padding(bottom = aureaSpacing.xs)
 								)
 
 								Text(
-									text = "• Files are permanently deleted immediately\n• No recovery option available",
+									text = stringResource(R.string.settings_sync_deletion_disabled_desc),
 									style = MaterialTheme.typography.bodySmall,
 									color = MaterialTheme.colorScheme.onSurfaceVariant
 								)
@@ -324,7 +370,7 @@ fun SettingsScreen(
 
 			item {
 				PaddedListGroup(
-					title = "App Information"
+					title = stringResource(R.string.settings_app_info_title)
 				) {
 					CustomPaddedListItem(
 						onClick = {
@@ -337,15 +383,15 @@ fun SettingsScreen(
 							contentDescription = null,
 							tint = MaterialTheme.colorScheme.primary
 						)
-						Spacer(modifier = Modifier.width(aureaSpacing.M))
+						Spacer(modifier = Modifier.width(aureaSpacing.m))
 						Column(modifier = Modifier.weight(1f)) {
 							Text(
-								text = "About",
+								text = stringResource(R.string.settings_about_title),
 								style = MaterialTheme.typography.bodyLarge,
 								color = MaterialTheme.colorScheme.onSurface
 							)
 							Text(
-								text = "Learn more about Media Sorter",
+								text = stringResource(R.string.settings_about_description),
 								style = MaterialTheme.typography.bodySmall,
 								color = MaterialTheme.colorScheme.onSurfaceVariant
 							)
@@ -363,15 +409,15 @@ fun SettingsScreen(
 							contentDescription = null,
 							tint = MaterialTheme.colorScheme.primary
 						)
-						Spacer(modifier = Modifier.width(aureaSpacing.M))
+						Spacer(modifier = Modifier.width(aureaSpacing.m))
 						Column(modifier = Modifier.weight(1f)) {
 							Text(
-								text = "Privacy Policy",
+								text = stringResource(R.string.settings_privacy_policy_title),
 								style = MaterialTheme.typography.bodyLarge,
 								color = MaterialTheme.colorScheme.onSurface
 							)
 							Text(
-								text = "Read our privacy policy",
+								text = stringResource(R.string.settings_privacy_policy_description),
 								style = MaterialTheme.typography.bodySmall,
 								color = MaterialTheme.colorScheme.onSurfaceVariant
 							)
@@ -391,15 +437,15 @@ fun SettingsScreen(
 							contentDescription = null,
 							tint = MaterialTheme.colorScheme.primary
 						)
-						Spacer(modifier = Modifier.width(aureaSpacing.M))
+						Spacer(modifier = Modifier.width(aureaSpacing.m))
 						Column(modifier = Modifier.weight(1f)) {
 							Text(
-								text = "Report a Bug",
+								text = stringResource(R.string.settings_report_bug_title),
 								style = MaterialTheme.typography.bodyLarge,
 								color = MaterialTheme.colorScheme.onSurface
 							)
 							Text(
-								text = "Help us improve the app",
+								text = stringResource(R.string.settings_report_bug_description),
 								style = MaterialTheme.typography.bodySmall,
 								color = MaterialTheme.colorScheme.onSurfaceVariant
 							)
@@ -416,15 +462,15 @@ fun SettingsScreen(
 							contentDescription = null,
 							tint = MaterialTheme.colorScheme.primary
 						)
-						Spacer(modifier = Modifier.width(aureaSpacing.M))
+						Spacer(modifier = Modifier.width(aureaSpacing.m))
 						Column(modifier = Modifier.weight(1f)) {
 							Text(
-								text = "Version",
+								text = stringResource(R.string.settings_version_title),
 								style = MaterialTheme.typography.bodyLarge,
 								color = MaterialTheme.colorScheme.onSurface
 							)
 							Text(
-								text = "1.0.0",
+								text = stringResource(R.string.settings_version_value),
 								style = MaterialTheme.typography.bodySmall,
 								color = MaterialTheme.colorScheme.onSurfaceVariant
 							)
@@ -435,7 +481,7 @@ fun SettingsScreen(
 
 			item {
 				PaddedListGroup(
-					title = "Tutorial"
+					title = stringResource(R.string.settings_tutorial_title)
 				) {
 					CustomPaddedListItem(
 						onClick = {
@@ -448,15 +494,15 @@ fun SettingsScreen(
 							contentDescription = null,
 							tint = MaterialTheme.colorScheme.primary
 						)
-						Spacer(modifier = Modifier.width(aureaSpacing.M))
+						Spacer(modifier = Modifier.width(aureaSpacing.m))
 						Column(modifier = Modifier.weight(1f)) {
 							Text(
-								text = "Reset Tutorial",
+								text = stringResource(R.string.settings_reset_tutorial_title),
 								style = MaterialTheme.typography.bodyLarge,
 								color = MaterialTheme.colorScheme.onSurface
 							)
 							Text(
-								text = "Show the tutorial again on next launch",
+								text = stringResource(R.string.settings_reset_tutorial_description),
 								style = MaterialTheme.typography.bodySmall,
 								color = MaterialTheme.colorScheme.onSurfaceVariant
 							)
@@ -489,6 +535,7 @@ fun SettingsScreenPreview() {
 			onBlurredBackgroundToggle = {},
 			onAutoPlayToggle = {},
 			onResetTutorial = {},
+			onResetViewedHistory = {},
 			onBack = {},
 			syncFileToTrashBin = false,
 			onSyncFileToTrashBinToggle = {})
