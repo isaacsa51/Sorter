@@ -89,27 +89,31 @@ jobs:
         run: |
           if [ -n "$KEYSTORE_BASE64" ]; then
             echo $KEYSTORE_BASE64 | base64 --decode > $GITHUB_WORKSPACE/keystore.jks
+            echo "KEYSTORE_EXISTS=true" >> $GITHUB_ENV
           else
             echo "⚠️ No keystore configured, building unsigned release"
+            echo "KEYSTORE_EXISTS=false" >> $GITHUB_ENV
           fi
 
-      - name: Build Release APK (signed)
-        if: steps.version.outputs.release_type == 'production' && secrets.KEYSTORE_FILE != ''
+      - name: Build Release APK
+        if: steps.version.outputs.release_type == 'production'
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          ./gradlew assembleRelease \
-            -Pandroid.injected.signing.store.file=$GITHUB_WORKSPACE/keystore.jks \
-            -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
-            -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
-            -Pandroid.injected.signing.key.password=$KEY_PASSWORD \
-            --stacktrace
-
-      - name: Build Release APK (unsigned)
-        if: steps.version.outputs.release_type == 'production' && secrets.KEYSTORE_FILE == ''
-        run: ./gradlew assembleRelease --stacktrace
+          if [ "$KEYSTORE_EXISTS" = "true" ]; then
+            echo "Building signed release APK..."
+            ./gradlew assembleRelease \
+              -Pandroid.injected.signing.store.file=$GITHUB_WORKSPACE/keystore.jks \
+              -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
+              -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
+              -Pandroid.injected.signing.key.password=$KEY_PASSWORD \
+              --stacktrace
+          else
+            echo "Building unsigned release APK..."
+            ./gradlew assembleRelease --stacktrace
+          fi
 
       - name: Clean up keystore
         if: always()
