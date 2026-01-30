@@ -25,7 +25,7 @@ object DatabaseModule {
 			SorterDatabase::class.java,
 			SorterDatabase.DATABASE_NAME
 		)
-			.fallbackToDestructiveMigration()
+			.fallbackToDestructiveMigration(false)
 			.build()
 	}
 	

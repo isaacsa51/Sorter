@@ -50,9 +50,11 @@
     <string name="settings_bg_mode_blurred">Blurred</string>
     <string name="settings_bg_mode_solid">Solid</string>
     
-    <string name="settings_playback_title">Playback</string>
+    <string name="settings_behaviour_title">Behaviour</string>
     <string name="settings_autoplay_title">Auto-Play Videos</string>
     <string name="settings_autoplay_description">Automatically play videos when reviewing</string>
+    <string name="settings_reset_viewed_history_title">Reset Viewed History</string>
+    <string name="settings_reset_viewed_history_description">Clear all viewed media to see all dates again</string>
 
     <string name="settings_storage_title">Storage</string>
     <string name="settings_sync_deletion_title">Sync media deletion</string>

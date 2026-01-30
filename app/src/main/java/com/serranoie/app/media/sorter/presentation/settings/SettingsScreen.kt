@@ -210,10 +210,10 @@ fun SettingsScreen(
 
 			item {
 				PaddedListGroup(
-					title = stringResource(R.string.settings_playback_title)
+					title = stringResource(R.string.settings_behaviour_title)
 				) {
 					CustomPaddedListItem(
-						onClick = onAutoPlayToggle, position = PaddedListItemPosition.Single
+						onClick = onAutoPlayToggle, position = PaddedListItemPosition.First
 					) {
 						Icon(
 							imageVector = Icons.Default.PlayArrow,
@@ -238,6 +238,32 @@ fun SettingsScreen(
 								onAutoPlayToggle()
 								view.toggleFeedback()
 							})
+					}
+					
+					CustomPaddedListItem(
+						onClick = {
+							onResetViewedHistory()
+							view.strongHapticFeedback()
+						}, position = PaddedListItemPosition.Last
+					) {
+						Icon(
+							imageVector = Icons.Default.Refresh,
+							contentDescription = null,
+							tint = MaterialTheme.colorScheme.primary
+						)
+						Spacer(modifier = Modifier.width(aureaSpacing.m))
+						Column(modifier = Modifier.weight(1f)) {
+							Text(
+								text = stringResource(R.string.settings_reset_viewed_history_title),
+								style = MaterialTheme.typography.bodyLarge,
+								color = MaterialTheme.colorScheme.onSurface
+							)
+							Text(
+								text = stringResource(R.string.settings_reset_viewed_history_description),
+								style = MaterialTheme.typography.bodySmall,
+								color = MaterialTheme.colorScheme.onSurfaceVariant
+							)
+						}
 					}
 				}
 			}
@@ -461,7 +487,7 @@ fun SettingsScreen(
 						onClick = {
 							onResetTutorial()
 							view.toggleFeedback()
-						}, position = PaddedListItemPosition.First
+						}, position = PaddedListItemPosition.Single
 					) {
 						Icon(
 							imageVector = Icons.Default.Refresh,
@@ -477,32 +503,6 @@ fun SettingsScreen(
 							)
 							Text(
 								text = stringResource(R.string.settings_reset_tutorial_description),
-								style = MaterialTheme.typography.bodySmall,
-								color = MaterialTheme.colorScheme.onSurfaceVariant
-							)
-						}
-					}
-					
-					CustomPaddedListItem(
-						onClick = {
-							onResetViewedHistory()
-							view.strongHapticFeedback()
-						}, position = PaddedListItemPosition.Last
-					) {
-						Icon(
-							imageVector = Icons.Default.Refresh,
-							contentDescription = null,
-							tint = MaterialTheme.colorScheme.primary
-						)
-						Spacer(modifier = Modifier.width(aureaSpacing.m))
-						Column(modifier = Modifier.weight(1f)) {
-							Text(
-								text = "Reset Viewed History",
-								style = MaterialTheme.typography.bodyLarge,
-								color = MaterialTheme.colorScheme.onSurface
-							)
-							Text(
-								text = "Clear all viewed media to see all dates again",
 								style = MaterialTheme.typography.bodySmall,
 								color = MaterialTheme.colorScheme.onSurfaceVariant
 							)
