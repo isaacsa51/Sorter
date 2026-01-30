@@ -53,7 +53,6 @@ fun SorterApp() {
 		val appSettings by settingsViewModel.appSettings.collectAsState()
 
 		val requestPermissions = PermissionHandler(
-			hasPermissions = navigationState.hasPermissions,
 			showPermissionDialog = navigationState.showPermissionDialog,
 			sorterViewModel = sorterViewModel,
 			onPermissionsGranted = {
@@ -64,8 +63,7 @@ fun SorterApp() {
 			},
 			onDismissDialog = {
 				navigationViewModel.showPermissionDialog(false)
-			}
-		)
+			})
 
 		AppNavHost(
 			currentScreen = navigationState.currentScreen,
@@ -74,7 +72,6 @@ fun SorterApp() {
 			onRequestPermissions = requestPermissions,
 			onNavigate = { action ->
 				navigationViewModel.handleAction(action)
-			}
-		)
+			})
 	}
 }

@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tutorial_title">Desliza para\nOrganizar</string>
+    <string name="tutorial_description_start">Limpia tu galería en segundos</string>
+    <string name="tutorial_description_up">Arriba</string>
+    <string name="tutorial_description_removes">" borra,"</string>
+    <string name="tutorial_description_down">Abajo</string>
+    <string name="tutorial_description_saves">" guardar."</string>
+    <string name="tutorial_gesture_delete">Borrar</string>
+    <string name="tutorial_gesture_save">Guardar</string>
+    <string name="tutorial_btn_start">Organizar</string>
+    <string name="content_desc_demo_media">Media de prueba</string>
+
+    <!-- Permission Handler -->
+    <string name="permission_dialog_title">Se requieren permisos de almacenamiento</string>
+    <string name="permission_dialog_text">Esta aplicación necesita acceso a tus fotos y videos para ayudarte a organizarlas. Sin este permiso, solamente podrás ver información de prueba. Puedes conceder el permiso en Ajustes.</string>
+    <string name="permission_btn_settings">Ir a Ajustes</string>
+    <string name="permission_btn_continue">Continuar con datos de prueba</string>
+
+    <!-- Review Screen -->
+    <string name="review_title">Revisar Archivos</string>
+    <plurals name="review_items_count">
+        <item quantity="one">%1$d archivo</item>
+        <item quantity="other">%1$d archivos</item>
+    </plurals>
+    <string name="review_btn_delete_all">Borrar todo</string>
+    <string name="review_empty_title">No hay archivos multimedia borrados</string>
+    <string name="review_empty_description">Los archivos que marques para borrar aparecerán aquí para su revisión</string>
+    <string name="review_dialog_delete_all_title">¿Borrar todos los archivos?</string>
+    <plurals name="review_dialog_delete_all_text">
+        <item quantity="one">¿Seguro que desea eliminar permanentemente este archivo? Esta acción no se puede deshacer.</item>
+        <item quantity="other">¿Seguro que desea eliminar permanentemente los %1$d archivos? Esta acción no se puede deshacer.</item>
+    </plurals>
+    <string name="review_btn_cancel">Cancelar</string>
+    <string name="content_desc_back">Atrás</string>
+    <string name="content_desc_settings">Ajustes</string>
+    <string name="content_desc_close">Cerrar</string>
+    <string name="content_desc_delete">Borrar</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Ajustes</string>
+    <string name="media_info_btn_open">Abrir</string>
+    <string name="settings_section_general">General</string>
+    <string name="settings_appearance_title">Apariencia</string>
+    <string name="settings_theme_title">Tema</string>
+    <string name="settings_theme_system">Seguir al sistema</string>
+    <string name="settings_theme_light">Claro</string>
+    <string name="settings_theme_dark">Oscuro</string>
+    <string name="settings_trash_title">Usar Papelera</string>
+    <string name="settings_trash_description">Mover los archivos eliminados a la Papelera del sistema en lugar de eliminarlos permanentemente</string>
+    <string name="settings_section_about">Acerca de</string>
+    <string name="settings_report_bug_description">Ayudenos a mejorar la app</string>
+    <string name="settings_version_title">Versión</string>
+    <string name="settings_developer_title">Desarrollador</string>
+
+    <!-- Theme Picker Dialog -->
+    <string name="settings_reset_tutorial_description">Mostrar el tutorial nuevamente en el próximo lanzamiento</string>
+    <string name="theme_picker_title">Elegir Tema</string>
+
+    <!-- Sorter Media Screen -->
+    <string name="sorter_done_title">¡Todo listo! 🎉</string>
+    <string name="sorter_done_description">Has organizado todos tus archivos multimedia.</string>
+    <string name="sorter_btn_review">Revisar Archivos (%1$d)</string>
+    <string name="sorter_btn_tutorial">Volver al Tutorial</string>
+    <string name="sorter_release_trash">Soltar para borrar</string>
+    <string name="sorter_release_save">DESLIZA HACIA ABAJO PARA GUARDAR</string>
+    <string name="sorter_loading_media">Cargando archivo...</string>
+    <string name="sorter_error_loading">No se puede cargar el archivo</string>
+    <string name="sorter_info_file_size">Tamaño</string>
+    <string name="sorter_info_date_created">Fecha de creación</string>
+    <string name="sorter_info_modified">Modificado</string>
+    <string name="sorter_info_dimensions">Dimensiones</string>
+    <string name="sorter_info_last_accessed">Último acceso</string>
+    <string name="sorter_info_path">Ubicación</string>
+    <string name="sorter_btn_open">Abrir</string>
+    <string name="content_desc_share">Compartir</string>
+    <string name="content_desc_info">Información</string>
+
+    <!-- Media File Formatter -->
+    <string name="date_today">Hoy</string>
+    <string name="date_yesterday">Ayer</string>
+    <plurals name="days_ago">
+        <item quantity="one">hace %d día</item>
+        <item quantity="other">hace %d días</item>
+    </plurals>
+    <plurals name="weeks_ago">
+        <item quantity="one">hace %d semana</item>
+        <item quantity="other">hace %d semanas</item>
+    </plurals>
+    <plurals name="months_ago">
+        <item quantity="one">hace %d mes</item>
+        <item quantity="other">hace %d meses</item>
+    </plurals>
+    <string name="settings_theme_description">Elige tu tema preferido</string>
+    <string name="settings_material_you_title">Material You</string>
+    <string name="settings_material_you_description">Colores dinámicos de tu fondo de pantalla</string>
+    <string name="settings_bg_mode_title">Modo de fondo</string>
+    <string name="settings_bg_mode_description">Estilo de fondo en pantalla de selección de contenido</string>
+    <string name="settings_bg_mode_blurred">Borroso</string>
+    <string name="settings_bg_mode_solid">Solido</string>
+    <string name="settings_playback_title">Playback</string>
+    <string name="settings_autoplay_title">Vídeos de reproducción automática</string>
+    <string name="settings_autoplay_description">Automáticamente iniciar vídeos al mostrarlos</string>
+    <string name="settings_storage_title">Almacenamiento</string>
+    <string name="settings_sync_deletion_title">Sincronizar eliminación de archivos</string>
+    <string name="settings_sync_deletion_description">Tap para leer más</string>
+    <string name="settings_sync_deletion_about">Acerca de este ajuste</string>
+    <string name="settings_sync_deletion_enabled_label">Cuando esta activado (Android 11+):</string>
+    <string name="settings_sync_deletion_enabled_desc">• Los archivos se mueven a la Papelera de tu teléfono • Se eliminan automáticamente después de 30 días • Se pueden recuperar antes de la eliminación permanente</string>
+    <string name="settings_sync_deletion_disabled_label">Cuando está desactivado:</string>
+    <string name="settings_sync_deletion_disabled_desc">• Los archivos se eliminan permanentemente de inmediato • No hay opción de recuperación disponible</string>
+    <string name="settings_app_info_title">Información de la aplicación</string>
+    <string name="settings_about_title">Acerca de</string>
+    <string name="settings_about_description">Aprenda más sobre Sorter</string>
+    <string name="settings_privacy_policy_title">Política de Privacidad</string>
+    <string name="settings_privacy_policy_description">Lea nuestras políticas de privacidad</string>
+    <string name="settings_report_bug_title">Reporte un bug</string>
+    <string name="settings_tutorial_title">Tutorial</string>
+    <string name="settings_reset_tutorial_title">Reiniciar tutorial</string>
+    <string name="completion_done">Todo listo!</string>
+    <string name="completion_description">Has organizado todos tus archivos</string>
+    <string name="completion_btn_tutorial">Ir atrás al tutorial</string>
+    <string name="gesture_keep">Guardar</string>
+    <string name="gesture_delete">Borrar</string>
+    <string name="media_info_label_file_size">Tamaño del archivo</string>
+    <string name="media_info_label_date_created">Fecha de creación</string>
+    <string name="media_info_label_modified">Modificado el</string>
+    <string name="media_info_label_dimensions">Dimensiones</string>
+    <string name="media_info_label_last_accessed">Último acceso</string>
+    <string name="media_info_label_path">Ubicación</string>
+</resources>

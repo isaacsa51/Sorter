@@ -13,6 +13,8 @@ interface MediaRepository {
     suspend fun getMediaByFolder(): Result<Map<String, List<MediaFile>>>
 
     suspend fun getMediaGroupedByDate(): Result<Map<LocalDate, List<MediaFile>>>
+
+    suspend fun getMediaGroupedByDateFiltered(): Result<Map<LocalDate, List<MediaFile>>>
     
     suspend fun deleteMedia(uri: Uri): Result<Boolean>
     
@@ -27,4 +29,12 @@ interface MediaRepository {
     fun createDeletionRequest(uris: List<Uri>, useTrash: Boolean): PendingIntent?
 
     fun clearCache()
+
+    suspend fun markAsViewed(mediaId: Long)
+
+    suspend fun isViewed(mediaId: Long): Boolean
+
+    suspend fun clearViewedHistory()
+
+    suspend fun getViewedCount(): Int
 }

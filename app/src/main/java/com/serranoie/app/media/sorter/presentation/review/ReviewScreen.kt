@@ -1,6 +1,6 @@
 package com.serranoie.app.media.sorter.presentation.review
 
-import android.net.Uri
+import androidx.annotation.PluralsRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
@@ -12,7 +12,19 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
@@ -26,10 +38,33 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.VideoLibrary
-import androidx.compose.material3.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.MotionScheme
-import androidx.compose.runtime.*
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,29 +73,27 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import coil.decode.VideoFrameDecoder
-import com.serranoie.app.media.sorter.data.MediaFile
-import com.serranoie.app.media.sorter.domain.Result
+import coil.request.ImageRequest
+import com.serranoie.app.media.sorter.R
 import com.serranoie.app.media.sorter.domain.repository.MediaRepository
 import com.serranoie.app.media.sorter.presentation.model.MediaFileUi
-import com.serranoie.app.media.sorter.ui.theme.components.PinchToZoomGridContainer
-import com.serranoie.app.media.sorter.ui.theme.components.GridZoomLevel
-import com.serranoie.app.media.sorter.ui.theme.components.detectPinchGestures
-import com.serranoie.app.media.sorter.ui.theme.util.DevicePreview
-import com.serranoie.app.media.sorter.ui.theme.util.PreviewWrapper
 import com.serranoie.app.media.sorter.ui.theme.AureaSpacing
+import com.serranoie.app.media.sorter.ui.theme.components.GridZoomLevel
+import com.serranoie.app.media.sorter.ui.theme.components.PinchToZoomGridContainer
+import com.serranoie.app.media.sorter.ui.theme.components.detectPinchGestures
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -71,13 +104,13 @@ fun ReviewScreen(
 	useTrash: Boolean,
 	onBack: () -> Unit = {},
 	onSettings: () -> Unit = {},
-	onInfo: () -> Unit = {},
 	onRemoveItem: (MediaFileUi) -> Unit = {},
 	onDeleteAll: () -> Unit = {}
 ) {
 	var showDeleteConfirmDialog by remember { mutableStateOf(false) }
 	var selectedMediaForFullscreen by remember { mutableStateOf<MediaFileUi?>(null) }
-	val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+	val scrollBehavior =
+		TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 	val gridState = rememberLazyStaggeredGridState()
 	val coroutineScope = rememberCoroutineScope()
 	val (deleteHandler, _) = rememberDeleteMediaHandler(
@@ -87,15 +120,12 @@ fun ReviewScreen(
 		},
 		onPermissionDenied = {
 			// TODO: Check what to do when user denied permission
-		}
-	)
+		})
 
-	// FAB and hint should be expanded/visible when at the top of the list
-	val expandedFab by remember { 
+	val expandedFab by remember {
 		derivedStateOf { gridState.firstVisibleItemIndex == 0 }
 	}
 
-	// Define zoom levels: 1 column, 2 columns, 3 columns, 4 columns
 	val zoomLevels = remember {
 		listOf(
 			GridZoomLevel(level = 0, columns = 1, nextLevel = 1, previousLevel = 0),
@@ -110,7 +140,6 @@ fun ReviewScreen(
 			deletedCount = deletedFiles.size,
 			onBack = onBack,
 			onSettings = onSettings,
-			onInfo = onInfo,
 			scrollBehavior = scrollBehavior
 		)
 	}, floatingActionButton = {
@@ -120,12 +149,12 @@ fun ReviewScreen(
 				expanded = expandedFab,
 				icon = {
 					Icon(
-						imageVector = Icons.Default.Delete, contentDescription = "Delete all"
+						imageVector = Icons.Default.Delete, contentDescription = stringResource(R.string.review_btn_delete_all)
 					)
 				},
 				text = {
 					Text(
-						text = "Delete",
+						text = stringResource(R.string.review_btn_delete_all),
 						style = MaterialTheme.typography.labelLargeEmphasized,
 					)
 				},
@@ -169,12 +198,10 @@ fun ReviewScreen(
 					showDeleteConfirmDialog = false
 				})
 			}
-			
+
 			selectedMediaForFullscreen?.let { media ->
 				FullscreenMediaViewer(
-					media = media,
-					onDismiss = { selectedMediaForFullscreen = null }
-				)
+					media = media, onDismiss = { selectedMediaForFullscreen = null })
 			}
 		}
 	}
@@ -189,7 +216,7 @@ private fun EmptyState() {
 	Column(
 		modifier = Modifier
 			.fillMaxSize()
-			.padding(spacing.XL),
+			.padding(spacing.xl),
 		horizontalAlignment = Alignment.CenterHorizontally,
 		verticalArrangement = Arrangement.Center
 	) {
@@ -199,15 +226,16 @@ private fun EmptyState() {
 			modifier = Modifier.size(80.dp),
 			tint = colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
 		)
-		Spacer(modifier = Modifier.height(spacing.M))
+		Spacer(modifier = Modifier.height(spacing.m))
 		Text(
-			text = "No deleted media",
+			text = stringResource(R.string.review_empty_title),
 			style = MaterialTheme.typography.titleLargeEmphasized,
 			color = colorScheme.onSurfaceVariant,
+			textAlign = TextAlign.Center
 		)
-		Spacer(modifier = Modifier.height(spacing.XS))
+		Spacer(modifier = Modifier.height(spacing.xs))
 		Text(
-			text = "Files you delete will appear here for review",
+			text = stringResource(R.string.review_empty_description),
 			style = MaterialTheme.typography.bodyMedium,
 			color = colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
 			textAlign = TextAlign.Center
@@ -218,12 +246,12 @@ private fun EmptyState() {
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ZoomableStaggeredGrid(
-	deletedFiles: List<MediaFileUi>, 
-	zoomLevel: GridZoomLevel, 
+	deletedFiles: List<MediaFileUi>,
+	zoomLevel: GridZoomLevel,
 	onZoomLevelChange: (Int) -> Unit,
 	onRemoveItem: (MediaFileUi) -> Unit,
 	onItemDoubleTap: (MediaFileUi) -> Unit = {},
-	gridState: androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
+	gridState: LazyStaggeredGridState
 ) {
 	var zoom by remember { mutableStateOf(1f) }
 
@@ -236,13 +264,13 @@ private fun ZoomableStaggeredGrid(
 	)
 
 	val spacing = AureaSpacing.current
-	
+
 	LazyVerticalStaggeredGrid(
 		state = gridState,
 		columns = StaggeredGridCells.Fixed(zoomLevel.columns),
-		contentPadding = PaddingValues(spacing.M),
-		horizontalArrangement = Arrangement.spacedBy(spacing.XS),
-		verticalItemSpacing = spacing.XS,
+		contentPadding = PaddingValues(spacing.m),
+		horizontalArrangement = Arrangement.spacedBy(spacing.xs),
+		verticalItemSpacing = spacing.xs,
 		modifier = Modifier
 			.fillMaxSize()
 			.graphicsLayer {
@@ -273,11 +301,10 @@ private fun ZoomableStaggeredGrid(
 			}) {
 		items(deletedFiles, key = { it.id }) { file ->
 			SwipeableMediaGridItem(
-				file = file, 
-				columnCount = zoomLevel.columns, 
+				file = file,
+				columnCount = zoomLevel.columns,
 				onRemove = { onRemoveItem(file) },
-				onDoubleTap = { onItemDoubleTap(file) }
-			)
+				onDoubleTap = { onItemDoubleTap(file) })
 		}
 	}
 }
@@ -288,49 +315,49 @@ private fun ReviewTopBar(
 	deletedCount: Int,
 	onBack: () -> Unit,
 	onSettings: () -> Unit,
-	onInfo: () -> Unit,
 	scrollBehavior: TopAppBarScrollBehavior
 ) {
 	MediumTopAppBar(
 		title = {
-			Column {
-				Text(
-					text = "Review Deleted",
-					style = MaterialTheme.typography.titleLargeEmphasized,
-				)
-				if (deletedCount > 0) {
-					Text(
-						text = "$deletedCount item${if (deletedCount != 1) "s" else ""}",
-						style = MaterialTheme.typography.bodySmall,
-						color = MaterialTheme.colorScheme.onSurfaceVariant
-					)
-				}
-			}
-		}, navigationIcon = {
-			IconButton(onClick = onBack) {
-				Icon(
-					imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back"
-				)
-			}
-		}, actions = {
-			IconButton(onClick = onSettings) {
-				Icon(
-					imageVector = Icons.Default.Settings, contentDescription = "Settings"
-				)
-			}
-		}, colors = TopAppBarDefaults.topAppBarColors(
-			containerColor = MaterialTheme.colorScheme.surface,
-			titleContentColor = MaterialTheme.colorScheme.onSurface
-		), scrollBehavior = scrollBehavior
+		Column {
+			Text(
+				text = stringResource(R.string.review_title),
+				style = MaterialTheme.typography.titleLargeEmphasized,
+			)
+			if (deletedCount > 0) {
+			Text(
+				text = pluralStringResource(
+					id = R.plurals.review_items_count,
+					count = deletedCount,
+					deletedCount
+				),
+				style = MaterialTheme.typography.bodySmall,
+				color = MaterialTheme.colorScheme.onSurfaceVariant
+			)
+		}
+		}
+	}, navigationIcon = {
+		IconButton(onClick = onBack) {
+			Icon(
+				imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.content_desc_back)
+			)
+		}
+	}, actions = {
+		IconButton(onClick = onSettings) {
+			Icon(
+				imageVector = Icons.Default.Settings, contentDescription = stringResource(R.string.content_desc_settings)
+			)
+		}
+	}, colors = TopAppBarDefaults.topAppBarColors(
+		containerColor = MaterialTheme.colorScheme.surface,
+		titleContentColor = MaterialTheme.colorScheme.onSurface
+	), scrollBehavior = scrollBehavior
 	)
 }
 
 @Composable
 private fun SwipeableMediaGridItem(
-	file: MediaFileUi, 
-	columnCount: Int, 
-	onRemove: () -> Unit,
-	onDoubleTap: () -> Unit = {}
+	file: MediaFileUi, columnCount: Int, onRemove: () -> Unit, onDoubleTap: () -> Unit = {}
 ) {
 	val offsetX = remember { Animatable(0f) }
 	var isRemoving by remember { mutableStateOf(false) }
@@ -349,9 +376,9 @@ private fun SwipeableMediaGridItem(
 				modifier = Modifier
 					.matchParentSize()
 					.background(
-						MaterialTheme.colorScheme.errorContainer, RoundedCornerShape(spacing.S)
+						MaterialTheme.colorScheme.errorContainer, RoundedCornerShape(spacing.s)
 					)
-					.padding(spacing.M), contentAlignment = Alignment.CenterEnd
+					.padding(spacing.m), contentAlignment = Alignment.CenterEnd
 			) {
 				Row(
 					horizontalArrangement = Arrangement.End,
@@ -360,35 +387,24 @@ private fun SwipeableMediaGridItem(
 				) {
 					Icon(
 						imageVector = Icons.Default.Delete,
-						contentDescription = "Delete",
+						contentDescription = stringResource(R.string.content_desc_delete),
 						tint = MaterialTheme.colorScheme.error,
 						modifier = Modifier.size(32.dp)
 					)
 				}
 			}
 
-			Box(
-				modifier = Modifier
-					.offset { IntOffset(offsetX.value.roundToInt(), 0) }
-					.pointerInput(Unit) {
-						detectHorizontalDragGestures(onDragEnd = {
-							if (offsetX.value < swipeThreshold) {
-								scope.launch {
-									isRemoving = true
-									delay(300)
-									onRemove()
-								}
-							} else {
-								scope.launch {
-									offsetX.animateTo(
-										targetValue = 0f, animationSpec = spring(
-											dampingRatio = Spring.DampingRatioMediumBouncy,
-											stiffness = Spring.StiffnessMedium
-										)
-									)
-								}
+			Box(modifier = Modifier
+				.offset { IntOffset(offsetX.value.roundToInt(), 0) }
+				.pointerInput(Unit) {
+					detectHorizontalDragGestures(onDragEnd = {
+						if (offsetX.value < swipeThreshold) {
+							scope.launch {
+								isRemoving = true
+								delay(300)
+								onRemove()
 							}
-						}, onDragCancel = {
+						} else {
 							scope.launch {
 								offsetX.animateTo(
 									targetValue = 0f, animationSpec = spring(
@@ -397,19 +413,27 @@ private fun SwipeableMediaGridItem(
 									)
 								)
 							}
-						}, onHorizontalDrag = { _, dragAmount ->
-							val newOffset = offsetX.value + dragAmount
-							if (newOffset <= 0) {
-								scope.launch {
-									offsetX.snapTo(newOffset)
-								}
+						}
+					}, onDragCancel = {
+						scope.launch {
+							offsetX.animateTo(
+								targetValue = 0f, animationSpec = spring(
+									dampingRatio = Spring.DampingRatioMediumBouncy,
+									stiffness = Spring.StiffnessMedium
+								)
+							)
+						}
+					}, onHorizontalDrag = { _, dragAmount ->
+						val newOffset = offsetX.value + dragAmount
+						if (newOffset <= 0) {
+							scope.launch {
+								offsetX.snapTo(newOffset)
 							}
-						})
-					}) {
+						}
+					})
+				}) {
 				MediaGridItem(
-					file = file, 
-					columnCount = columnCount,
-					onDoubleTap = onDoubleTap
+					file = file, columnCount = columnCount, onDoubleTap = onDoubleTap
 				)
 			}
 		}
@@ -418,9 +442,7 @@ private fun SwipeableMediaGridItem(
 
 @Composable
 private fun MediaGridItem(
-	file: MediaFileUi, 
-	columnCount: Int,
-	onDoubleTap: () -> Unit = {}
+	file: MediaFileUi, columnCount: Int, onDoubleTap: () -> Unit = {}
 ) {
 	val colorScheme = MaterialTheme.colorScheme
 	val spacing = AureaSpacing.current
@@ -444,11 +466,8 @@ private fun MediaGridItem(
 			.height(baseHeight * heightMultiplier)
 			.pointerInput(Unit) {
 				detectTapGestures(
-					onDoubleTap = { onDoubleTap() }
-				)
-			},
-		shape = RoundedCornerShape(spacing.S),
-		colors = CardDefaults.cardColors(
+					onDoubleTap = { onDoubleTap() })
+			}, shape = RoundedCornerShape(spacing.s), colors = CardDefaults.cardColors(
 			containerColor = if (file.mediaType == "video") {
 				colorScheme.tertiaryContainer
 			} else {
@@ -461,16 +480,12 @@ private fun MediaGridItem(
 				val context = LocalContext.current
 
 				val imageRequest = remember(file.uri, file.mediaType) {
-					ImageRequest.Builder(context)
-						.data(file.uri)
-						.crossfade(true)
-						.apply {
-							// For videos, extract a frame as thumbnail
-							if (file.mediaType == "video") {
-								decoderFactory(VideoFrameDecoder.Factory())
-							}
+					ImageRequest.Builder(context).data(file.uri).crossfade(true).apply {
+						// For videos, extract a frame as thumbnail
+						if (file.mediaType == "video") {
+							decoderFactory(VideoFrameDecoder.Factory())
 						}
-						.build()
+					}.build()
 				}
 
 				AsyncImage(
@@ -515,7 +530,7 @@ private fun MediaGridItem(
 			Surface(
 				modifier = Modifier
 					.align(Alignment.TopEnd)
-					.padding(spacing.XS),
+					.padding(spacing.xs),
 				shape = CircleShape,
 				color = colorScheme.surface.copy(alpha = 0.8f)
 			) {
@@ -527,7 +542,7 @@ private fun MediaGridItem(
 					},
 					contentDescription = null,
 					modifier = Modifier
-						.padding(spacing.XS)
+						.padding(spacing.xs)
 						.size(14.dp),
 					tint = colorScheme.onSurface
 				)
@@ -541,7 +556,7 @@ private fun MediaGridItem(
 						.background(
 							Color.Black.copy(alpha = 0.6f)
 						)
-						.padding(spacing.XS)
+						.padding(spacing.xs)
 				) {
 					Text(
 						text = file.fileName,
@@ -571,13 +586,17 @@ private fun DeleteAllConfirmationDialog(
 		)
 	}, title = {
 		Text(
-			text = "Delete All Files?",
+			text = stringResource(R.string.review_dialog_delete_all_title),
 			style = MaterialTheme.typography.titleLargeEmphasized,
 			textAlign = TextAlign.Center
 		)
 	}, text = {
 		Text(
-			text = "Are you sure you want to permanently delete all $itemCount file${if (itemCount != 1) "s" else ""}? This action cannot be undone.",
+			text = pluralStringResource(
+				id = R.plurals.review_dialog_delete_all_text,
+				count = itemCount,
+				itemCount
+			),
 			style = MaterialTheme.typography.bodyLarge,
 			textAlign = TextAlign.Center,
 			color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -590,7 +609,7 @@ private fun DeleteAllConfirmationDialog(
 			)
 		) {
 			Text(
-				text = "Delete All",
+				text = stringResource(R.string.review_btn_delete_all),
 				style = MaterialTheme.typography.labelLargeEmphasized,
 				fontWeight = FontWeight.Bold
 			)
@@ -598,7 +617,7 @@ private fun DeleteAllConfirmationDialog(
 	}, dismissButton = {
 		TextButton(onClick = onDismiss) {
 			Text(
-				text = "Cancel", style = MaterialTheme.typography.labelLargeEmphasized
+				text = stringResource(R.string.review_btn_cancel), style = MaterialTheme.typography.labelLargeEmphasized
 			)
 		}
 	})
@@ -607,12 +626,11 @@ private fun DeleteAllConfirmationDialog(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FullscreenMediaViewer(
-	media: MediaFileUi,
-	onDismiss: () -> Unit
+	media: MediaFileUi, onDismiss: () -> Unit
 ) {
 	val context = LocalContext.current
 	val spacing = AureaSpacing.current
-	
+
 	Box(
 		modifier = Modifier
 			.fillMaxSize()
@@ -620,17 +638,13 @@ private fun FullscreenMediaViewer(
 	) {
 		if (media.uri != null) {
 			val imageRequest = remember(media.uri, media.mediaType) {
-				ImageRequest.Builder(context)
-					.data(media.uri)
-					.crossfade(true)
-					.apply {
-						if (media.mediaType == "video") {
-							decoderFactory(VideoFrameDecoder.Factory())
-						}
+				ImageRequest.Builder(context).data(media.uri).crossfade(true).apply {
+					if (media.mediaType == "video") {
+						decoderFactory(VideoFrameDecoder.Factory())
 					}
-					.build()
+				}.build()
 			}
-			
+
 			AsyncImage(
 				model = imageRequest,
 				contentDescription = media.fileName,
@@ -638,30 +652,29 @@ private fun FullscreenMediaViewer(
 					.fillMaxSize()
 					.pointerInput(Unit) {
 						detectTapGestures(
-							onTap = { onDismiss() }
-						)
+							onTap = { onDismiss() })
 					},
 				contentScale = ContentScale.Fit
 			)
 		}
-		
+
 		// Close button
 		Surface(
 			modifier = Modifier
 				.align(Alignment.TopEnd)
-				.padding(spacing.M),
+				.padding(spacing.m),
 			shape = CircleShape,
 			color = Color.Black.copy(alpha = 0.5f)
 		) {
 			IconButton(onClick = onDismiss) {
 				Icon(
 					imageVector = Icons.Default.Close,
-					contentDescription = "Close",
+					contentDescription = stringResource(R.string.content_desc_close),
 					tint = Color.White
 				)
 			}
 		}
-		
+
 		// Media info overlay
 		Surface(
 			modifier = Modifier
@@ -670,7 +683,7 @@ private fun FullscreenMediaViewer(
 			color = Color.Black.copy(alpha = 0.7f)
 		) {
 			Column(
-				modifier = Modifier.padding(spacing.M)
+				modifier = Modifier.padding(spacing.m)
 			) {
 				Text(
 					text = media.fileName,
@@ -678,7 +691,7 @@ private fun FullscreenMediaViewer(
 					color = Color.White,
 					fontWeight = FontWeight.Bold
 				)
-				Spacer(modifier = Modifier.height(spacing.XS))
+				Spacer(modifier = Modifier.height(spacing.xs))
 				Text(
 					text = media.fileInfo,
 					style = MaterialTheme.typography.bodySmall,
@@ -688,70 +701,3 @@ private fun FullscreenMediaViewer(
 		}
 	}
 }
-
-@DevicePreview
-@Composable
-fun ReviewScreenPreview() {
-	// [info] - Mock repository for preview. NEED TO DELETE THIS
-	val mockRepository = object : MediaRepository {
-		override suspend fun fetchMediaFiles() = Result.Success(emptyList<MediaFile>())
-		override suspend fun getMediaByFolder() = Result.Success(emptyMap<String, List<MediaFile>>())
-		override suspend fun getMediaGroupedByDate() = Result.Success(emptyMap<LocalDate, List<MediaFile>>())
-		override suspend fun deleteMedia(uri: Uri) = Result.Success(true)
-		override suspend fun deleteMultipleMedia(uris: List<Uri>) = Result.Success(0)
-		override fun createDeletionRequest(uris: List<Uri>, useTrash: Boolean) = null
-		override fun clearCache() {}
-	}
-	
-	PreviewWrapper {
-		ReviewScreen(
-			deletedFiles = listOf(
-				MediaFileUi(
-					id = "1",
-					fileName = "Beach_Sunset_01.jpg",
-					fileInfo = "2.5 MB • Yesterday",
-					mediaType = "image",
-					date = "Yesterday",
-					fileSize = "2.5 MB",
-					dimensions = "4032x3024",
-					dateCreated = "2025-01-08 10:30 AM",
-					lastAccessed = "2025-01-09 09:15 AM",
-					modified = "Yesterday",
-					path = "/photos/beach/"
-				), MediaFileUi(
-					id = "2",
-					fileName = "Family_Dinner.mp4",
-					fileInfo = "15.8 MB • 2 days ago",
-					mediaType = "video",
-					date = "Jan 5, 2025",
-					fileSize = "15.8 MB",
-					dimensions = "1920x1080",
-					dateCreated = "2025-01-05 06:45 PM",
-					lastAccessed = "2025-01-07 03:20 PM",
-					modified = "2 days ago",
-					path = "/videos/family/"
-				), MediaFileUi(
-					id = "3",
-					fileName = "Mountain_Trip.jpg",
-					fileInfo = "3.2 MB • 3 days ago",
-					mediaType = "image",
-					date = "Jan 4, 2025",
-					fileSize = "3.2 MB",
-					dimensions = "3840x2160",
-					dateCreated = "2025-01-04 02:15 PM",
-					lastAccessed = "2025-01-06 11:00 AM",
-					modified = "3 days ago",
-					path = "/photos/nature/mountains/"
-				)
-			),
-			repository = mockRepository,
-			useTrash = false,
-			onBack = {}, 
-			onSettings = {}, 
-			onInfo = {}, 
-			onRemoveItem = {}, 
-			onDeleteAll = {}
-		)
-	}
-}
-

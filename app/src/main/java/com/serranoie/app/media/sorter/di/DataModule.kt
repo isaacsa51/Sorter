@@ -2,6 +2,7 @@ package com.serranoie.app.media.sorter.di
 
 import android.content.Context
 import com.serranoie.app.media.sorter.data.SorterMediaRepositoryImpl
+import com.serranoie.app.media.sorter.data.database.ViewedMediaDao
 import com.serranoie.app.media.sorter.data.datasource.AndroidMediaDataSource
 import com.serranoie.app.media.sorter.data.datasource.MediaDataSource
 import com.serranoie.app.media.sorter.domain.repository.MediaRepository
@@ -27,8 +28,9 @@ object DataModule {
     @Provides
     @Singleton
     fun provideMediaRepository(
-        mediaDataSource: MediaDataSource
+        mediaDataSource: MediaDataSource,
+        viewedMediaDao: ViewedMediaDao
     ): MediaRepository {
-        return SorterMediaRepositoryImpl(mediaDataSource)
+        return SorterMediaRepositoryImpl(mediaDataSource, viewedMediaDao)
     }
 }

@@ -5,14 +5,11 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.rounded.Archive
-import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,6 +20,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -93,25 +91,25 @@ fun TutorialScreen(
 	var isInfoExpanded by remember { mutableStateOf(false) }
 
 	val descriptionText = buildAnnotatedString {
-		append("Clean up your gallery in seconds. ")
+		append(stringResource(R.string.tutorial_description_start))
 		withStyle(
 			style = SpanStyle(
 				color = colorScheme.error,
 				fontStyle = MaterialTheme.typography.bodyLargeEmphasized.fontStyle
 			)
 		) {
-			append("Up")
+			append(stringResource(R.string.tutorial_description_up))
 		}
-		append(" removes, ")
+		append(stringResource(R.string.tutorial_description_removes))
 		withStyle(
 			style = SpanStyle(
 				color = colorScheme.primary,
 				fontStyle = MaterialTheme.typography.bodyLargeEmphasized.fontStyle
 			)
 		) {
-			append("Down")
+			append(stringResource(R.string.tutorial_description_down))
 		}
-		append(" saves.")
+		append(stringResource(R.string.tutorial_description_saves))
 	}
 
 	Scaffold(
@@ -127,19 +125,19 @@ fun TutorialScreen(
 				modifier = Modifier
 					.fillMaxSize()
 					.verticalScroll(rememberScrollState())
-					.padding(horizontal = spacing.M),
+					.padding(horizontal = spacing.m),
 				horizontalAlignment = Alignment.CenterHorizontally
 			) {
-				Spacer(modifier = Modifier.height(spacing.M))
+				Spacer(modifier = Modifier.height(spacing.m))
 
 				Text(
-					text = "Swipe to\nOrganize",
+					text = stringResource(R.string.tutorial_title),
 					style = MaterialTheme.typography.displaySmallEmphasized.copy(fontWeight = FontWeight.Bold),
 					color = colorScheme.onSurface,
 					textAlign = TextAlign.Center,
 				)
 
-				Spacer(modifier = Modifier.height(spacing.M))
+				Spacer(modifier = Modifier.height(spacing.m))
 
 				Text(
 					text = descriptionText,
@@ -148,7 +146,7 @@ fun TutorialScreen(
 					textAlign = TextAlign.Center,
 				)
 
-				Spacer(modifier = Modifier.height(spacing.S))
+				Spacer(modifier = Modifier.height(spacing.s))
 
 				Box(
 					modifier = Modifier
@@ -160,13 +158,13 @@ fun TutorialScreen(
 						modifier = Modifier
 							.fillMaxWidth()
 							.align(Alignment.TopCenter)
-							.padding(top = trashIconOffset.coerceAtLeast(0f).dp + spacing.S)
+							.padding(top = trashIconOffset.coerceAtLeast(0f).dp + spacing.s)
 							.zIndex(3f), contentAlignment = Alignment.TopCenter
 					) {
 						GestureIndicator(
 							visible = trashIconAlpha > 0.01f,
 							icon = Icons.Filled.Delete,
-							text = "Delete",
+							text = stringResource(R.string.tutorial_gesture_delete),
 							containerColor = colorScheme.errorContainer,
 							contentColor = colorScheme.error,
 							alpha = trashIconAlpha,
@@ -209,7 +207,7 @@ fun TutorialScreen(
 								} else {
 									Image(
 										painter = painterResource(id = R.drawable.img_mock_protrait_tutorial),
-										contentDescription = "Demo media",
+										contentDescription = stringResource(R.string.content_desc_demo_media),
 										modifier = Modifier.fillMaxSize(),
 										contentScale = ContentScale.Crop
 									)
@@ -231,13 +229,13 @@ fun TutorialScreen(
 						modifier = Modifier
 							.fillMaxWidth()
 							.align(Alignment.BottomCenter)
-							.padding(bottom = keepIconOffset.coerceAtLeast(0f).dp + spacing.S)
+							.padding(bottom = keepIconOffset.coerceAtLeast(0f).dp + spacing.s)
 							.zIndex(3f), contentAlignment = Alignment.BottomCenter
 					) {
 						GestureIndicator(
 							visible = keepIconAlpha > 0.01f,
 							icon = Icons.Filled.CheckCircle,
-							text = "Save",
+							text = stringResource(R.string.tutorial_gesture_save),
 							containerColor = Color(0xFF4CAF50),
 							contentColor = Color.White,
 							alpha = keepIconAlpha,
@@ -246,7 +244,7 @@ fun TutorialScreen(
 					}
 				}
 
-				Spacer(modifier = Modifier.height(spacing.M))
+				Spacer(modifier = Modifier.height(spacing.m))
 
 				Button(
 					modifier = Modifier
@@ -259,7 +257,7 @@ fun TutorialScreen(
 					onClick = onGetStarted,
 				) {
 					Text(
-						text = "Start Organizing",
+						text = stringResource(R.string.tutorial_btn_start),
 						style = MaterialTheme.typography.titleMediumEmphasized,
 						color = colorScheme.onPrimary,
 					)

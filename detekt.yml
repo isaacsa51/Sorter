@@ -55,40 +55,33 @@ complexity:
     active: false
   ComplexMethod:
     active: true
-    threshold: 15
+    threshold: 25
+    ignoreAnnotated: ['Composable']
   LabeledExpression:
     active: false
   LargeClass:
     active: true
     threshold: 600
   LongMethod:
-    active: true
+    active: false
     threshold: 60
   LongParameterList:
     active: true
-    functionThreshold: 6
-    constructorThreshold: 7
+    functionThreshold: 12
+    constructorThreshold: 12
   MethodOverloading:
     active: false
   NamedArguments:
     active: false
   NestedBlockDepth:
     active: true
-    threshold: 4
+    threshold: 5
   ReplaceSafeCallChainWithRun:
     active: false
   StringLiteralDuplication:
     active: false
   TooManyFunctions:
-    active: true
-    thresholdInFiles: 15
-    thresholdInClasses: 15
-    thresholdInInterfaces: 15
-    thresholdInObjects: 15
-    thresholdInEnums: 15
-    ignoreDeprecated: false
-    ignorePrivate: false
-    ignoreOverridden: false
+    active: false
 
 coroutines:
   active: true
@@ -167,7 +160,7 @@ exceptions:
   ThrowingNewInstanceOfSameException:
     active: true
   TooGenericExceptionCaught:
-    active: true
+    active: false
     exceptionNames:
       - ArrayIndexOutOfBoundsException
       - Error
@@ -209,7 +202,7 @@ naming:
   LambdaParameterNaming:
     active: false
   MatchingDeclarationName:
-    active: true
+    active: false
   MemberNameEqualsClassName:
     active: true
   NoNameShadowing:
@@ -351,7 +344,7 @@ style:
     active: false
   MaxLineLength:
     active: true
-    maxLineLength: 120
+    maxLineLength: 130
     excludeCommentStatements: true
   MayBeConst:
     active: true

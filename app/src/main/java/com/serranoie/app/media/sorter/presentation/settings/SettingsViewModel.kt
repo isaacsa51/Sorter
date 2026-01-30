@@ -1,9 +1,11 @@
 package com.serranoie.app.media.sorter.presentation.settings
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.serranoie.app.media.sorter.data.settings.AppSettings
 import com.serranoie.app.media.sorter.data.settings.ThemeMode
+import com.serranoie.app.media.sorter.domain.repository.MediaRepository
 import com.serranoie.app.media.sorter.domain.settings.GetAppSettingsUseCase
 import com.serranoie.app.media.sorter.domain.settings.UpdateSettingsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,8 +18,13 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     getAppSettings: GetAppSettingsUseCase,
-    private val updateSettings: UpdateSettingsUseCase
+    private val updateSettings: UpdateSettingsUseCase,
+    private val mediaRepository: MediaRepository
 ) : ViewModel() {
+    
+    companion object {
+        private const val TAG = "SettingsViewModel"
+    }
     
 
     val appSettings: StateFlow<AppSettings> = getAppSettings()
@@ -108,6 +115,18 @@ class SettingsViewModel @Inject constructor(
     fun resetToDefaults() {
         viewModelScope.launch {
             updateSettings.resetSettings()
+        }
+    }
+
+    fun resetViewedHistory() {
+        viewModelScope.launch {
+            try {
+                mediaRepository.clearViewedHistory()
+                mediaRepository.clearCache()
+                Log.d(TAG, "Viewed media history reset successfully - all dates are available again")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to reset viewed history", e)
+            }
         }
     }
 }

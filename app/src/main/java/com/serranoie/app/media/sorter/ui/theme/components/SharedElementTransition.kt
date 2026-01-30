@@ -1,6 +1,5 @@
 package com.serranoie.app.media.sorter.ui.theme.components
 
-import android.net.Uri
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -11,12 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-
-/**
- * Shared element key for identifying media images across different composables.
- * Uses URI to uniquely identify each media file.
- */
-data class ImageElementKey(val uri: Uri?)
 
 /**
  * Custom modifier that creates a shared bounds transition with shape morphing.

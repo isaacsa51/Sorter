@@ -55,8 +55,10 @@ object AppModule {
     
     @Provides
     @Singleton
-    fun provideMediaFileFormatter(): MediaFileFormatter {
-        return MediaFileFormatter()
+    fun provideMediaFileFormatter(
+        @ApplicationContext context: Context
+    ): MediaFileFormatter {
+        return MediaFileFormatter(context)
     }
     
     @Provides

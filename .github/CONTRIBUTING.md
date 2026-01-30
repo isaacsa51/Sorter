@@ -44,10 +44,7 @@ Feature requests are welcome! Please provide:
 3. **Make your changes** following the coding standards
 4. **Test locally** before pushing:
    ```bash
-   ./gradlew lint
-   ./gradlew detekt
-   ./gradlew testDebugUnitTest
-   ./gradlew assembleDebug
+   ./gradlew lint detekt testDebugUnitTest assembleDebug
    ```
 
 5. **Commit your changes** with clear messages:

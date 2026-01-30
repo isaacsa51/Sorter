@@ -2,13 +2,22 @@
 
 package com.serranoie.app.media.sorter.ui.theme.components
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BlurOn
-import androidx.compose.material.icons.filled.GridView
-import androidx.compose.material.icons.outlined.BlurOn
-import androidx.compose.material3.*
+import androidx.compose.material.icons.rounded.PermMedia
+import androidx.compose.material3.Badge
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -16,7 +25,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.background
 import com.serranoie.app.media.sorter.ui.theme.util.PreviewWrapper
 
 /**
@@ -25,7 +33,6 @@ import com.serranoie.app.media.sorter.ui.theme.util.PreviewWrapper
  * @param date The date to display in the center badge
  * @param deletedCount The count of deleted items to show in the badge
  * @param useBlurredBackground Whether the blurred background is currently enabled
- * @param onToggleBackground Callback when the background toggle button is clicked
  * @param onNavigateToReview Callback when the grid view button is clicked
  * @param modifier Modifier to be applied to the app bar
  */
@@ -34,7 +41,6 @@ fun SorterTopAppBar(
     date: String,
     deletedCount: Int,
     useBlurredBackground: Boolean = true,
-    onToggleBackground: () -> Unit = {},
     onNavigateToReview: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -96,7 +102,7 @@ fun SorterTopAppBar(
                     )
                 ) {
                     Icon(
-                        imageVector = Icons.Default.GridView,
+                        imageVector = Icons.Rounded.PermMedia,
                         contentDescription = "Review deleted files",
                         modifier = Modifier.size(24.dp)
                     )
@@ -136,7 +142,6 @@ private fun SorterTopAppBarWithBadgePreview() {
                 date = "May 23, 2024",
                 deletedCount = 5,
                 useBlurredBackground = true,
-                onToggleBackground = {},
                 onNavigateToReview = {}
             )
         }
@@ -157,7 +162,6 @@ private fun SorterTopAppBarNoBadgePreview() {
                 date = "May 23, 2024",
                 deletedCount = 0,
                 useBlurredBackground = false,
-                onToggleBackground = {},
                 onNavigateToReview = {}
             )
         }

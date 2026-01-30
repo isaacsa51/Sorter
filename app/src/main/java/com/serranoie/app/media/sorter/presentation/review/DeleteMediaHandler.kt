@@ -62,7 +62,7 @@ class DeleteMediaHandler(
 							needsPermission = true
 						}
 					} catch (e: RecoverableSecurityException) {
-						Log.d(TAG, "RecoverableSecurityException for $uri, will request permission")
+						Log.d(TAG, "RecoverableSecurityException for $uri, will request permission, $e")
 						urisNeedingPermission.add(uri)
 						needsPermission = true
 					} catch (e: SecurityException) {

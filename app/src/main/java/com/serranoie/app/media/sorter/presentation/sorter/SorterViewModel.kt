@@ -1,12 +1,15 @@
 package com.serranoie.app.media.sorter.presentation.sorter
 
+import android.content.ContentUris
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.serranoie.app.media.sorter.domain.DeleteMediaUseCase
 import com.serranoie.app.media.sorter.domain.GetMediaRandomBatchesUseCase
 import com.serranoie.app.media.sorter.domain.Result
 import com.serranoie.app.media.sorter.domain.SorterMediaUseCase
 import com.serranoie.app.media.sorter.domain.UndoManager
+import com.serranoie.app.media.sorter.domain.repository.MediaRepository
 import com.serranoie.app.media.sorter.presentation.mapper.MediaFileMapper
 import com.serranoie.app.media.sorter.presentation.model.MediaFileUi
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,7 +26,8 @@ import javax.inject.Inject
 class SorterViewModel @Inject constructor(
 	private val sorterMediaUseCase: SorterMediaUseCase,
 	private val getMediaRandomBatchesUseCase: GetMediaRandomBatchesUseCase,
-	private val deleteMediaUseCase: com.serranoie.app.media.sorter.domain.DeleteMediaUseCase,
+	private val deleteMediaUseCase: DeleteMediaUseCase,
+	private val mediaRepository: MediaRepository,
 	private val mediaFileMapper: MediaFileMapper,
 	private val undoManager: UndoManager<MediaFileUi>
 ) : ViewModel() {
@@ -142,6 +146,20 @@ class SorterViewModel @Inject constructor(
 	}
 
 	private fun keepCurrentFile() {
+		val file = _uiState.value.currentFile
+		
+		file?.uri?.let { uri ->
+			viewModelScope.launch {
+				try {
+					val mediaId = ContentUris.parseId(uri)
+					mediaRepository.markAsViewed(mediaId)
+					Log.d(TAG, "Marked kept file ${file.fileName} (ID: $mediaId) as viewed")
+				} catch (e: Exception) {
+					Log.w(TAG, "Failed to mark file as viewed: ${e.message}")
+				}
+			}
+		}
+		
 		_uiState.update { state ->
 			val nextIndex = state.currentIndex + 1
 			if (nextIndex < allMediaFiles.size) {
@@ -161,6 +179,18 @@ class SorterViewModel @Inject constructor(
 	private fun trashCurrentFile() {
 		val file = _uiState.value.currentFile ?: return
 		val currentIndex = _uiState.value.currentIndex
+
+		file.uri?.let { uri ->
+			viewModelScope.launch {
+				try {
+					val mediaId = ContentUris.parseId(uri)
+					mediaRepository.markAsViewed(mediaId)
+					Log.d(TAG, "Marked trashed file ${file.fileName} (ID: $mediaId) as viewed")
+				} catch (e: Exception) {
+					Log.w(TAG, "Failed to mark file as viewed: ${e.message}")
+				}
+			}
+		}
 
 		undoManager.recordAction(file, currentIndex)
 

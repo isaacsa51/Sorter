@@ -81,7 +81,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 5. Push to the Branch (`git push origin feature/AmazingFeature`)
 6. Open a Pull Request (use the PR template)
 
-**CI/CD:** All PRs are automatically checked with lint, Detekt static analysis, unit tests, and build verification.
+**CI/CD:** All PRs are automatically checked with Android Lint, Detekt static analysis, unit tests, and build verification.
 
 See [Contributing Guidelines](.github/CONTRIBUTING.md) for detailed information.
 

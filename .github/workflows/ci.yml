@@ -34,10 +34,6 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Check code style
-        run: ./gradlew ktlintCheck --stacktrace || echo "ktlint not configured, skipping"
-        continue-on-error: true
-
       - name: Run Android Lint
         run: ./gradlew lint --stacktrace
 
