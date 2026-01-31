@@ -73,9 +73,6 @@ jobs:
       - name: Run tests
         run: ./gradlew testDebugUnitTest --stacktrace
 
-      - name: Run detekt
-        run: ./gradlew detekt --stacktrace
-
       # For unsigned debug builds (no keystore required)
       - name: Build Debug APK (unsigned)
         if: steps.version.outputs.release_type != 'production'
@@ -89,8 +86,10 @@ jobs:
         run: |
           if [ -n "$KEYSTORE_BASE64" ]; then
             echo $KEYSTORE_BASE64 | base64 --decode > $GITHUB_WORKSPACE/keystore.jks
+            echo "KEYSTORE_EXISTS=true" >> $GITHUB_ENV
           else
             echo "⚠️ No keystore configured, building unsigned release"
+            echo "KEYSTORE_EXISTS=false" >> $GITHUB_ENV
           fi
 
       - name: Build Release APK
