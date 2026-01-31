@@ -1,20 +1,18 @@
 package com.serranoie.app.media.sorter.update
 
-import android.app.Activity
 import android.content.Context
+import android.content.pm.PackageManager.NameNotFoundException
+import com.serranoie.app.media.sorter.R
 import com.serranoie.app.media.sorter.data.UpdatePreferences
-import com.serranoie.app.media.sorter.update.model.UpdateCheckResult
 import com.serranoie.app.media.sorter.update.model.UpdateInfo
 import com.serranoie.app.media.sorter.update.model.UpdateSource
+import com.serranoie.app.media.sorter.update.model.Version
 import com.serranoie.app.media.sorter.update.service.GitHubUpdateChecker
 import com.serranoie.app.media.sorter.update.service.PlayStoreUpdateChecker
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.firstOrNull
-import java.util.prefs.Preferences
 import javax.inject.Inject
 import javax.inject.Named
-import android.content.pm.PackageManager.NameNotFoundException
-import com.serranoie.app.media.sorter.update.model.Version
 
 class UpdateManager @Inject constructor(
     @ApplicationContext private val context: Context,
@@ -42,7 +40,7 @@ class UpdateManager @Inject constructor(
     suspend fun checkForUpdates(forceCheck: Boolean = false): UpdateCheckResponse {
         val lastCheckedVersion = updatePreferences.lastCheckedVersion.firstOrNull()
         val lastCheckTimeValue = try {
-            updatePreferences.lastCheckTime.firstOrNull()?.toLong()
+	        updatePreferences.lastCheckTime.firstOrNull()
         } catch (e: Exception) {
             null
         }
@@ -77,6 +75,15 @@ class UpdateManager @Inject constructor(
     private suspend fun checkGitHubUpdates(forceCheck: Boolean): UpdateCheckResponse {
         val result = githubUpdateChecker.checkForUpdates(currentVersionName, currentVersionCode)
 
+        // Handle errors (including network issues)
+        if (result.error != null) {
+            return UpdateCheckResponse(
+                hasUpdate = false,
+                source = UpdateSource.GITHUB,
+                message = result.error
+            )
+        }
+
         if (result.hasUpdate && result.updateInfo != null) {
             updatePreferences.saveLastCheckedVersion(currentVersionName)
             return UpdateCheckResponse(
@@ -90,7 +97,8 @@ class UpdateManager @Inject constructor(
         updatePreferences.saveLastCheckedVersion(currentVersionName)
         return UpdateCheckResponse(
             hasUpdate = false,
-            source = UpdateSource.GITHUB
+            source = UpdateSource.GITHUB,
+            message = context.getString(R.string.update_check_latest_version)
         )
     }
 

@@ -7,9 +7,11 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.serranoie.app.media.sorter.MainActivity
+import com.serranoie.app.media.sorter.R
 import com.serranoie.app.media.sorter.update.UpdateManager
 import com.serranoie.app.media.sorter.update.UpdateCheckResponse
 import dagger.assisted.Assisted
@@ -17,6 +19,7 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+@HiltWorker
 class UpdateCheckWorker @AssistedInject constructor(
 	@Assisted private val context: Context,
 	@Assisted private val params: WorkerParameters,
@@ -66,12 +69,19 @@ class UpdateCheckWorker @AssistedInject constructor(
 			PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
 		)
 
+		val contentText = response.updateInfo?.versionName?.let { 
+			context.getString(R.string.notification_update_text, it)
+		} ?: context.getString(R.string.notification_update_text_generic)
+
 		val notification =
-			NotificationCompat.Builder(context, CHANNEL_ID).setContentTitle("Update Available")
-				.setContentText(response.updateInfo?.versionName?.let { "Version $it is ready for download" }
-					?: "A new version is available")
-				.setSmallIcon(android.R.drawable.stat_sys_download).setContentIntent(pendingIntent)
-				.setAutoCancel(true).setPriority(NotificationCompat.PRIORITY_HIGH).build()
+			NotificationCompat.Builder(context, CHANNEL_ID)
+				.setContentTitle(context.getString(R.string.notification_update_title))
+				.setContentText(contentText)
+				.setSmallIcon(android.R.drawable.stat_sys_download)
+				.setContentIntent(pendingIntent)
+				.setAutoCancel(true)
+				.setPriority(NotificationCompat.PRIORITY_HIGH)
+				.build()
 
 		notificationManager.notify(UPDATE_NOTIFICATION_ID, notification)
 	}
@@ -79,9 +89,11 @@ class UpdateCheckWorker @AssistedInject constructor(
 	private fun createNotificationChannel() {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 			val channel = NotificationChannel(
-				CHANNEL_ID, "App Updates", NotificationManager.IMPORTANCE_HIGH
+				CHANNEL_ID,
+				context.getString(R.string.notification_channel_updates_name),
+				NotificationManager.IMPORTANCE_HIGH
 			).apply {
-				description = "Notifications about new app updates"
+				description = context.getString(R.string.notification_channel_updates_desc)
 			}
 
 			val notificationManager =

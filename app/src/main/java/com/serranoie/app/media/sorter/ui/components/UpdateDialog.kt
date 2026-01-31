@@ -11,6 +11,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.serranoie.app.media.sorter.R
 import com.serranoie.app.media.sorter.update.model.UpdateInfo
 
 @Composable
@@ -23,14 +25,17 @@ fun UpdateDialog(
 ) {
     val onDismiss = if (isCritical) {{}} else onDismissRequest
 
-    val dialogTitle = if (isCritical) "Critical Update Required" else "Update Available"
+    val dialogTitle = stringResource(
+        if (isCritical) R.string.update_dialog_title_critical 
+        else R.string.update_dialog_title_normal
+    )
     val dialogMessage = buildString {
-        append("A new version (${updateInfo.versionName}) is available.\n")
+        append(stringResource(R.string.update_dialog_message_new_version, updateInfo.versionName))
         if (isCritical) {
-            append("This update is required to continue using the app.\n")
+            append(stringResource(R.string.update_dialog_message_critical))
         }
         if (updateInfo.releaseNotes.isNotEmpty()) {
-            append("\nWhat's new:\n")
+            append(stringResource(R.string.update_dialog_message_whats_new))
             append(updateInfo.releaseNotes.take(300))
             if (updateInfo.releaseNotes.length > 300)
                 append("...")
@@ -56,13 +61,13 @@ fun UpdateDialog(
         },
         confirmButton = {
             Button(onClick = onDownload) {
-                Text("Download Update")
+                Text(stringResource(R.string.update_dialog_btn_download))
             }
         },
         dismissButton = {
             if (!isCritical) {
                 TextButton(onClick = onDismissRequest) {
-                    Text("Later")
+                    Text(stringResource(R.string.update_dialog_btn_later))
                 }
             }
         },

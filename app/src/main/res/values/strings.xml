@@ -72,6 +72,8 @@
     <string name="settings_privacy_policy_description">Read our privacy policy</string>
     <string name="settings_report_bug_title">Report a Bug</string>
     <string name="settings_report_bug_description">Help us improve the app</string>
+    <string name="settings_check_updates_title">Check for Updates</string>
+    <string name="settings_check_updates_description">Check if a new version is available</string>
     <string name="settings_version_title">Version</string>
     <string name="settings_version_value" translatable="false">1.0.0</string>
 
@@ -144,4 +146,28 @@
     <string name="settings_trash_description">Move deleted files to trash bin instead of delete them permanently</string>
     <string name="settings_section_about">About</string>
     <string name="settings_developer_title">Developer</string>
+
+    <!-- Update Dialog -->
+    <string name="update_dialog_title_critical">Critical Update Required</string>
+    <string name="update_dialog_title_normal">Update Available</string>
+    <string name="update_dialog_message_new_version">"A new version (%1$s) is available. "</string>
+    <string name="update_dialog_message_critical">This update is required to continue using the app.\n</string>
+    <string name="update_dialog_message_whats_new">" What's new: "</string>
+    <string name="update_dialog_btn_download">Download Update</string>
+    <string name="update_dialog_btn_later">Later</string>
+
+    <!-- Update Notifications -->
+    <string name="notification_update_title">Update Available</string>
+    <string name="notification_update_text">Version %1$s is ready for download</string>
+    <string name="notification_update_text_generic">A new version is available</string>
+    <string name="notification_channel_updates_name">App Updates</string>
+    <string name="notification_channel_updates_desc">Notifications about new app updates</string>
+
+    <!-- Update Check Messages -->
+    <string name="update_check_no_internet">No internet connection. Please check your network settings and ensure the app has network permission enabled.</string>
+    <string name="update_check_timeout">Connection timeout. Please check your internet connection.</string>
+    <string name="update_check_no_releases">No releases found. Check back later for updates.</string>
+    <string name="update_check_failed">Failed to check for updates: %1$s</string>
+    <string name="update_check_latest_version">You\'re using the latest version</string>
+    <string name="update_check_available">Update available: %1$s</string>
 </resources>

@@ -1,8 +1,11 @@
 package com.serranoie.app.media.sorter.update.service
 
+import android.content.Context
+import com.serranoie.app.media.sorter.R
 import com.serranoie.app.media.sorter.update.model.UpdateCheckResult
 import com.serranoie.app.media.sorter.update.model.UpdateInfo
 import com.serranoie.app.media.sorter.update.model.Version
+import dagger.hilt.android.qualifiers.ApplicationContext
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
@@ -15,6 +18,7 @@ interface GitHubApiService {
 }
 
 class GitHubUpdateChecker @Inject constructor(
+	@ApplicationContext private val context: Context,
 	@Named("GitHubRepoOwner") private val owner: String,
 	@Named("GitHubRepoName") private val repoName: String
 ) {
@@ -32,15 +36,35 @@ class GitHubUpdateChecker @Inject constructor(
 		return try {
 			val release = apiService.getLatestRelease()
 
+			println("=== Update Check Debug ===")
+			println("Release tag: ${release.tagName}")
+			println("Release name: ${release.name}")
+			println("Current version: $currentName")
+			println("Prerelease: ${release.prerelease}")
+
 			val latestVersion = Version(release.tagName)
 			val currentVersion = Version(currentName)
 
+			println("Latest version parsed: $latestVersion")
+			println("Current version parsed: $currentVersion")
+			println("Has update: $latestVersion > $currentVersion}")
+
 			val hasUpdate = latestVersion > currentVersion
+			println("Has update result: $hasUpdate")
+
+			// Skip prerelease releases
+			if (release.prerelease) {
+				println("Skipping prerelease release")
+				return UpdateCheckResult(hasUpdate = false, error = "Release is prerelease")
+			}
 
 			if (hasUpdate) {
 				val asset = release.assets.firstOrNull {
 					it.name.endsWith(".apk") && !it.name.contains("-unsigned")
 				} ?: release.assets.firstOrNull { it.name.endsWith(".apk") }
+
+				println("Found asset: ${asset?.name}")
+				println("Download URL: ${asset?.browserDownloadUrl}")
 
 				val severity = UpdateSeverity.fromReleaseBody(release.body)
 				val updateInfo = UpdateInfo(
@@ -59,8 +83,26 @@ class GitHubUpdateChecker @Inject constructor(
 				UpdateCheckResult(hasUpdate = false)
 			}
 		} catch (e: Exception) {
+			println("Update check error: ${e.message}")
+			e.printStackTrace()
+			
+			val errorMessage = when {
+				e is java.net.UnknownHostException || 
+				e.message?.contains("Unable to resolve host", ignoreCase = true) == true ||
+				e.message?.contains("No address associated with hostname", ignoreCase = true) == true -> {
+					context.getString(R.string.update_check_no_internet)
+				}
+				e.message?.contains("timeout", ignoreCase = true) == true -> {
+					context.getString(R.string.update_check_timeout)
+				}
+				e.message?.contains("404", ignoreCase = true) == true -> {
+					context.getString(R.string.update_check_no_releases)
+				}
+				else -> context.getString(R.string.update_check_failed, e.message ?: "Unknown error")
+			}
+			
 			UpdateCheckResult(
-				hasUpdate = false, error = "Failed to check for updates: ${e.message}"
+				hasUpdate = false, error = errorMessage
 			)
 		}
 	}

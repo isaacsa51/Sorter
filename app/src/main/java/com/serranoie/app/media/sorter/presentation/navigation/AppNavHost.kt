@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.serranoie.app.media.sorter.R
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.launch
 import com.serranoie.app.media.sorter.data.settings.AppSettings
@@ -36,6 +37,7 @@ import com.serranoie.app.media.sorter.presentation.settings.SettingsScreen
 import com.serranoie.app.media.sorter.presentation.settings.SettingsViewModel
 import com.serranoie.app.media.sorter.presentation.sorter.SorterMediaScreen
 import com.serranoie.app.media.sorter.presentation.sorter.SorterViewModel
+import com.serranoie.app.media.sorter.presentation.update.UpdateViewModel
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
@@ -96,6 +98,7 @@ fun AppNavHost(
 ) {
 	val sorterViewModel: SorterViewModel = hiltViewModel()
 	val settingsViewModel: SettingsViewModel = hiltViewModel()
+	val updateViewModel: UpdateViewModel = hiltViewModel()
 	val context = LocalContext.current
 	val repository = remember {
 		EntryPointAccessors.fromApplication<MediaRepositoryEntryPoint>(
@@ -159,6 +162,7 @@ fun AppNavHost(
 
 				Screen.Settings -> SettingsScreenWrapper(
 					settingsViewModel = settingsViewModel,
+					updateViewModel = updateViewModel,
 					appSettings = appSettings,
 					onNavigate = onNavigate
 				)
@@ -259,15 +263,29 @@ private fun ReviewScreenWrapper(
 @Composable
 private fun SettingsScreenWrapper(
 	settingsViewModel: SettingsViewModel,
+	updateViewModel: UpdateViewModel,
 	appSettings: AppSettings,
 	onNavigate: (NavigationAction) -> Unit
 ) {
+	val context = LocalContext.current
+	val updateCheckResult by updateViewModel.updateCheckResult.collectAsState()
+	val updateCheckMessage = when {
+		updateCheckResult?.hasUpdate == true -> {
+			val version = updateCheckResult?.updateInfo?.versionName ?: ""
+			context.getString(R.string.update_check_available, version)
+		}
+		updateCheckResult?.message != null -> updateCheckResult?.message
+		else -> null
+	}
+	
 	SettingsScreen(
 		appTheme = getThemeString(appSettings.themeMode),
 		isMaterialYouEnabled = appSettings.useDynamicColors,
 		isBlurredBackgroundEnabled = appSettings.useBlurredBackground,
 		isAutoPlayEnabled = appSettings.autoPlayVideos,
 		syncFileToTrashBin = appSettings.syncTrashDeletion,
+		updateCheckMessage = updateCheckMessage,
+		isCheckingForUpdates = false,
 		onThemeChange = { theme -> settingsViewModel.setThemeMode(getThemeMode(theme)) },
 		onMaterialYouToggle = { settingsViewModel.toggleDynamicColors() },
 		onBlurredBackgroundToggle = { settingsViewModel.toggleBlurredBackground() },
@@ -279,7 +297,8 @@ private fun SettingsScreenWrapper(
 		},
 		onResetViewedHistory = { settingsViewModel.resetViewedHistory() },
 		onBack = { onNavigate(NavigationAction.NavigateBack) },
-		onCheckForUpdates = { settingsViewModel.checkForUpdates() })
+		onCheckForUpdates = { updateViewModel.checkForUpdates(forceCheck = true) },
+		onDismissUpdateMessage = {  })
 }
 
 private fun getThemeString(themeMode: ThemeMode): String {

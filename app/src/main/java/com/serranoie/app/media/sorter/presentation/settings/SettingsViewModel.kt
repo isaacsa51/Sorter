@@ -8,8 +8,6 @@ import com.serranoie.app.media.sorter.data.settings.ThemeMode
 import com.serranoie.app.media.sorter.domain.repository.MediaRepository
 import com.serranoie.app.media.sorter.domain.settings.GetAppSettingsUseCase
 import com.serranoie.app.media.sorter.domain.settings.UpdateSettingsUseCase
-import com.serranoie.app.media.sorter.update.UpdateManager
-import com.serranoie.app.media.sorter.update.UpdateCheckResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -21,19 +19,12 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     getAppSettings: GetAppSettingsUseCase,
     private val updateSettings: UpdateSettingsUseCase,
-    private val updateManager: UpdateManager,
     private val mediaRepository: MediaRepository
 ) : ViewModel() {
 
     companion object {
         private const val TAG = "SettingsViewModel"
     }
-
-    var updateCheckResult: UpdateCheckResponse? = null
-        private set
-
-    var isCheckingForUpdates = false
-        private set
     
 
     val appSettings: StateFlow<AppSettings> = getAppSettings()
@@ -135,20 +126,6 @@ class SettingsViewModel @Inject constructor(
                 Log.d(TAG, "Viewed media history reset successfully - all dates are available again")
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to reset viewed history", e)
-            }
-        }
-    }
-
-    fun checkForUpdates() {
-        viewModelScope.launch {
-            isCheckingForUpdates = true
-            try {
-                updateCheckResult = updateManager.checkForUpdates(forceCheck = true)
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to check for updates", e)
-                updateCheckResult = null
-            } finally {
-                isCheckingForUpdates = false
             }
         }
     }

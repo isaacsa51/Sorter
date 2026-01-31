@@ -50,6 +50,7 @@
     <string name="settings_trash_description">Mover los archivos eliminados a la Papelera del sistema en lugar de eliminarlos permanentemente</string>
     <string name="settings_section_about">Acerca de</string>
     <string name="settings_report_bug_description">Ayudenos a mejorar la app</string>
+    <string name="settings_check_updates_description">Buscar si hay versiones nuevas disponibles</string>
     <string name="settings_version_title">Versión</string>
     <string name="settings_developer_title">Desarrollador</string>
 
@@ -131,4 +132,23 @@
     <string name="media_info_label_dimensions">Dimensiones</string>
     <string name="media_info_label_last_accessed">Último acceso</string>
     <string name="media_info_label_path">Ubicación</string>
+    <string name="settings_check_updates_title">Checar Actualizaciones</string>
+    <string name="update_dialog_title_critical">Actualización Crítica Requerida</string>
+    <string name="update_dialog_title_normal">Actualización Disponible</string>
+    <string name="update_dialog_message_new_version">"Una nueva versión (%1$s) está disponible. "</string>
+    <string name="update_dialog_message_critical">Esta actualización se requiere para seguir usando la aplicación.</string>
+    <string name="update_dialog_message_whats_new">" Lo nuevo: "</string>
+    <string name="update_dialog_btn_download">Descargar Actualización</string>
+    <string name="update_dialog_btn_later">Después</string>
+    <string name="notification_update_title">Actualización Disponible</string>
+    <string name="notification_update_text">Versión %1$s lista para descargar</string>
+    <string name="notification_update_text_generic">Una nueva versión está disponible</string>
+    <string name="notification_channel_updates_name">Actualización de la app</string>
+    <string name="notification_channel_updates_desc">Notificaciones acerca de actualizaciones de la app</string>
+    <string name="update_check_no_internet">Sin conexión a internet. Por favor cheque su conexión a internet y asegure que tenga los permisos.</string>
+    <string name="update_check_timeout">Connection timeout. Por favor cheque su conexión a internet.</string>
+    <string name="update_check_no_releases">Sin actualizaciones. Puede checar después por actualizaciones</string>
+    <string name="update_check_failed">Error al checar por actualizaciones: %1$s</string>
+    <string name="update_check_latest_version">Estás usando la última versión</string>
+    <string name="update_check_available">Actualización disponible: %1$s</string>
 </resources>

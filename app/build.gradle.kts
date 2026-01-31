@@ -18,8 +18,8 @@ android {
         applicationId = "com.serranoie.app.media.sorter"
         minSdk = 31
         targetSdk = 36
-        versionCode = 101
-        versionName = "1.0.1"
+        versionCode = 1012
+        versionName = "1.0.12"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -88,6 +88,11 @@ dependencies {
 	implementation("com.google.dagger:hilt-android:2.57.1")
 	kapt("com.google.dagger:hilt-android-compiler:2.57.1")
 	implementation(libs.androidx.hilt.navigation.compose)
+	
+	// Hilt Work integration
+	implementation("androidx.hilt:hilt-work:1.2.0")
+	kapt("androidx.hilt:hilt-compiler:1.2.0")
+	implementation(libs.androidx.hilt.work)
 
 	// Update checking dependencies
 	implementation("com.google.android.play:app-update:2.1.0")

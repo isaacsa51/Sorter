@@ -1,5 +1,6 @@
 package com.serranoie.app.media.sorter.presentation.settings
 
+import android.content.pm.PackageManager
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -32,11 +33,15 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,6 +66,8 @@ import com.serranoie.app.media.sorter.ui.theme.components.PaddedListItemPosition
 import com.serranoie.app.media.sorter.ui.theme.util.DevicePreview
 import com.serranoie.app.media.sorter.ui.theme.util.PreviewWrapper
 
+private const val DEFAULT_VERSION = "1.0"
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SettingsScreen(
@@ -69,6 +76,8 @@ fun SettingsScreen(
 	isBlurredBackgroundEnabled: Boolean,
 	isAutoPlayEnabled: Boolean,
 	syncFileToTrashBin: Boolean,
+	updateCheckMessage: String? = null,
+	isCheckingForUpdates: Boolean = false,
 	onThemeChange: (String) -> Unit,
 	onMaterialYouToggle: () -> Unit,
 	onBlurredBackgroundToggle: () -> Unit,
@@ -77,7 +86,8 @@ fun SettingsScreen(
 	onResetTutorial: () -> Unit = {},
 	onResetViewedHistory: () -> Unit = {},
 	onBack: () -> Unit = {},
-	onCheckForUpdates: () -> Unit = {}
+	onCheckForUpdates: () -> Unit = {},
+	onDismissUpdateMessage: () -> Unit = {}
 ) {
 	var showThemeDialog by remember { mutableStateOf(false) }
 	var isStorageInfoExpanded by remember { mutableStateOf(false) }
@@ -86,10 +96,26 @@ fun SettingsScreen(
 	val aureaSpacing = AureaSpacing.current
 	val context = LocalContext.current
 	val view = LocalView.current
+	val snackbarHostState = remember { SnackbarHostState() }
 
+	// Get version from package manager
+	val versionName = try {
+		context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: DEFAULT_VERSION
+	} catch (e: PackageManager.NameNotFoundException) {
+		DEFAULT_VERSION
+	}
+
+	LaunchedEffect(updateCheckMessage) {
+		updateCheckMessage?.let { message ->
+			snackbarHostState.showSnackbar(message)
+			onDismissUpdateMessage()
+		}
+	}
 
 	Scaffold(
-		modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection), topBar = {
+		modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+		snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+		topBar = {
 			LargeTopAppBar(
 				title = {
 					Text(
@@ -468,12 +494,12 @@ fun SettingsScreen(
 						Spacer(modifier = Modifier.width(aureaSpacing.m))
 						Column(modifier = Modifier.weight(1f)) {
 							Text(
-								text = "Check for Updates",
+								text = stringResource(R.string.settings_check_updates_title),
 								style = MaterialTheme.typography.bodyLarge,
 								color = MaterialTheme.colorScheme.onSurface
 							)
 							Text(
-								text = "Check if a new version is available",
+								text = stringResource(R.string.settings_check_updates_description),
 								style = MaterialTheme.typography.bodySmall,
 								color = MaterialTheme.colorScheme.onSurfaceVariant
 							)
@@ -498,7 +524,7 @@ fun SettingsScreen(
 								color = MaterialTheme.colorScheme.onSurface
 							)
 							Text(
-								text = stringResource(R.string.settings_version_value),
+								text = "v$versionName",
 								style = MaterialTheme.typography.bodySmall,
 								color = MaterialTheme.colorScheme.onSurfaceVariant
 							)
