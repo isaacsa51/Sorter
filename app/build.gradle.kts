@@ -18,8 +18,8 @@ android {
         applicationId = "com.serranoie.app.media.sorter"
         minSdk = 31
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 101
+        versionName = "1.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -58,7 +58,8 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.material3)
     implementation(libs.material3)
-    testImplementation(libs.junit)
+	implementation(libs.androidx.work.runtime.ktx)
+	testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
@@ -87,6 +88,15 @@ dependencies {
 	implementation("com.google.dagger:hilt-android:2.57.1")
 	kapt("com.google.dagger:hilt-android-compiler:2.57.1")
 	implementation(libs.androidx.hilt.navigation.compose)
+
+	// Update checking dependencies
+	implementation("com.google.android.play:app-update:2.1.0")
+	implementation("com.google.android.play:app-update-ktx:2.1.0")
+	implementation("androidx.work:work-runtime-ktx:2.10.0")
+	implementation("com.squareup.retrofit2:retrofit:2.11.0")
+	implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+	implementation("com.squareup.okhttp3:okhttp:4.12.0")
+	implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 }
 
 // Detekt configuration

@@ -99,7 +99,7 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          if [ "$KEYSTORE_EXISTS" = "true" ]; then
+          if [ -f "$GITHUB_WORKSPACE/keystore.jks" ] && [ -n "$KEYSTORE_PASSWORD" ]; then
             echo "Building signed release APK..."
             ./gradlew assembleRelease \
               -Pandroid.injected.signing.store.file=$GITHUB_WORKSPACE/keystore.jks \
@@ -330,9 +330,6 @@ jobs:
             echo "---"
             echo ""
             echo "**Full Changelog**: https://github.com/${{ github.repository }}/commits/v$VERSION"
-            echo ""
-            echo "🤖 Generated with [Firebender](https://firebender.com)"
-            
             echo 'EOF'
           } >> $GITHUB_OUTPUT
 
