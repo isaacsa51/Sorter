@@ -278,7 +278,8 @@ private fun SettingsScreenWrapper(
 			onNavigate(NavigationAction.NavigateTo(Screen.Onboard))
 		},
 		onResetViewedHistory = { settingsViewModel.resetViewedHistory() },
-		onBack = { onNavigate(NavigationAction.NavigateBack) })
+		onBack = { onNavigate(NavigationAction.NavigateBack) },
+		onCheckForUpdates = { settingsViewModel.checkForUpdates() })
 }
 
 private fun getThemeString(themeMode: ThemeMode): String {

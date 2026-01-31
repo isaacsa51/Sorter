@@ -329,9 +329,6 @@ jobs:
             echo "---"
             echo ""
             echo "**Full Changelog**: https://github.com/${{ github.repository }}/commits/v$VERSION"
-            echo ""
-            echo "🤖 Generated with [Firebender](https://firebender.com)"
-            
             echo 'EOF'
           } >> $GITHUB_OUTPUT
 

@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Brightness4
 import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PlayArrow
@@ -75,7 +76,8 @@ fun SettingsScreen(
 	onSyncFileToTrashBinToggle: () -> Unit = {},
 	onResetTutorial: () -> Unit = {},
 	onResetViewedHistory: () -> Unit = {},
-	onBack: () -> Unit = {}
+	onBack: () -> Unit = {},
+	onCheckForUpdates: () -> Unit = {}
 ) {
 	var showThemeDialog by remember { mutableStateOf(false) }
 	var isStorageInfoExpanded by remember { mutableStateOf(false) }
@@ -446,6 +448,32 @@ fun SettingsScreen(
 							)
 							Text(
 								text = stringResource(R.string.settings_report_bug_description),
+								style = MaterialTheme.typography.bodySmall,
+								color = MaterialTheme.colorScheme.onSurfaceVariant
+							)
+						}
+					}
+
+					CustomPaddedListItem(
+						onClick = {
+							onCheckForUpdates()
+							view.weakHapticFeedback()
+						}, position = PaddedListItemPosition.Middle
+					) {
+						Icon(
+							imageVector = Icons.Default.Download,
+							contentDescription = null,
+							tint = MaterialTheme.colorScheme.primary
+						)
+						Spacer(modifier = Modifier.width(aureaSpacing.m))
+						Column(modifier = Modifier.weight(1f)) {
+							Text(
+								text = "Check for Updates",
+								style = MaterialTheme.typography.bodyLarge,
+								color = MaterialTheme.colorScheme.onSurface
+							)
+							Text(
+								text = "Check if a new version is available",
 								style = MaterialTheme.typography.bodySmall,
 								color = MaterialTheme.colorScheme.onSurfaceVariant
 							)
