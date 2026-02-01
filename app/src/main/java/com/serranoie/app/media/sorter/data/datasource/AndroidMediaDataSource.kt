@@ -37,6 +37,7 @@ class AndroidMediaDataSource @Inject constructor(
 				MediaStore.Images.Media.SIZE,
 				MediaStore.Images.Media.DATE_TAKEN,
 				MediaStore.Images.Media.DATE_ADDED,
+				MediaStore.Images.Media.DATE_MODIFIED,
 				MediaStore.Images.Media.DATA,
 				MediaStore.Images.Media.BUCKET_DISPLAY_NAME,
 				MediaStore.Images.Media.WIDTH,
@@ -71,6 +72,7 @@ class AndroidMediaDataSource @Inject constructor(
 				MediaStore.Video.Media.SIZE,
 				MediaStore.Video.Media.DATE_TAKEN,
 				MediaStore.Video.Media.DATE_ADDED,
+				MediaStore.Video.Media.DATE_MODIFIED,
 				MediaStore.Video.Media.DATA,
 				MediaStore.Video.Media.BUCKET_DISPLAY_NAME,
 				MediaStore.Video.Media.WIDTH,
@@ -249,45 +251,61 @@ class AndroidMediaDataSource @Inject constructor(
 			)
 
 			cursor?.use {
-				val idColumn = it.getColumnIndexOrThrow(projection[0])
-				val nameColumn = it.getColumnIndexOrThrow(projection[1])
-				val sizeColumn = it.getColumnIndexOrThrow(projection[2])
-				val dateTakenColumn = it.getColumnIndexOrThrow(projection[3])
-				val dateAddedColumn = it.getColumnIndexOrThrow(projection[4])
-				val bucketColumn = it.getColumnIndexOrThrow(projection[6])
+			val idColumn = it.getColumnIndexOrThrow(projection[0])
+			val nameColumn = it.getColumnIndexOrThrow(projection[1])
+			val sizeColumn = it.getColumnIndexOrThrow(projection[2])
+			val dateTakenColumn = it.getColumnIndexOrThrow(projection[3])
+			val dateAddedColumn = it.getColumnIndexOrThrow(projection[4])
+			val dateModifiedColumn = it.getColumnIndexOrThrow(projection[5])
+			val bucketColumn = it.getColumnIndexOrThrow(projection[7])
 
-				while (it.moveToNext()) {
-					val id = it.getLong(idColumn)
-					val name = it.getString(nameColumn) ?: continue
-					val size = it.getLong(sizeColumn)
-					val dateTaken = it.getLong(dateTakenColumn)
-					val dateAdded = it.getLong(dateAddedColumn)
-					val bucket = it.getString(bucketColumn) ?: "Unknown"
+			while (it.moveToNext()) {
+				val id = it.getLong(idColumn)
+				val name = it.getString(nameColumn) ?: continue
+				val size = it.getLong(sizeColumn)
+				val dateTaken = it.getLong(dateTakenColumn)
+				val dateAdded = it.getLong(dateAddedColumn)
+				val dateModified = it.getLong(dateModifiedColumn)
+				val bucket = it.getString(bucketColumn) ?: "Unknown"
 
-					val contentUriWithId = ContentUris.withAppendedId(contentUri, id)
-					val extension =
-						name.substringAfterLast(".", if (mediaType == "image") "jpg" else "mp4")
+				val contentUriWithId = ContentUris.withAppendedId(contentUri, id)
+				val extension =
+					name.substringAfterLast(".", if (mediaType == "image") "jpg" else "mp4")
 
-					val timestamp = if (dateTaken > 0) dateTaken else dateAdded * 1000
-					val fileDate = Instant.ofEpochMilli(timestamp)
-						.atZone(ZoneId.systemDefault())
-						.toLocalDate()
-
-					mediaFiles.add(
-						MediaFile(
-							uri = contentUriWithId,
-							mediaType = mediaType,
-							extension = extension,
-							fileName = name,
-							folderName = bucket,
-							fileSize = size,
-							fileDate = fileDate,
-							previewUri = contentUriWithId,
-							dateTaken = timestamp
-						)
-					)
+				// Try multiple date sources with fallbacks:
+				// 1. DATE_TAKEN (when photo was captured, in milliseconds)
+				// 2. DATE_MODIFIED (last modified time, in seconds - needs conversion)
+				// 3. DATE_ADDED (when added to MediaStore, in seconds - needs conversion)
+				// 4. Current time as last resort
+				val timestamp = when {
+					dateTaken > 0 -> dateTaken
+					dateModified > 0 -> dateModified * 1000
+					dateAdded > 0 -> dateAdded * 1000
+					else -> {
+						Log.w(TAG, "No valid date found for $name, using current time")
+						System.currentTimeMillis()
+					}
 				}
+				
+				val fileDate = Instant.ofEpochMilli(timestamp)
+					.atZone(ZoneId.systemDefault())
+					.toLocalDate()
+
+				mediaFiles.add(
+					MediaFile(
+						uri = contentUriWithId,
+						mediaType = mediaType,
+						extension = extension,
+						fileName = name,
+						folderName = bucket,
+						fileSize = size,
+						fileDate = fileDate,
+						previewUri = contentUriWithId,
+						dateTaken = timestamp
+					)
+				)
 			}
+		}
 
 			return if (mediaFiles.isEmpty()) {
 				AppError.NoMediaFoundError().asError()

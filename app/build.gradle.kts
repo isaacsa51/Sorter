@@ -18,8 +18,8 @@ android {
         applicationId = "com.serranoie.app.media.sorter"
         minSdk = 31
         targetSdk = 36
-        versionCode = 1012
-        versionName = "1.0.12"
+        versionCode = 1013
+        versionName = "1.0.13"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

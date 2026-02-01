@@ -50,10 +50,16 @@ fun PermissionHandler(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         Log.d("PermissionHandler", "Permissions result: $permissions")
-        val allGranted = permissions.values.all { it }
         
-        if (allGranted) {
-            Log.d("PermissionHandler", "Permissions granted, loading media files")
+        val mediaPermissionsGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            (permissions[Manifest.permission.READ_MEDIA_IMAGES] == true &&
+             permissions[Manifest.permission.READ_MEDIA_VIDEO] == true)
+        } else {
+            permissions[Manifest.permission.READ_EXTERNAL_STORAGE] == true
+        }
+        
+        if (mediaPermissionsGranted) {
+            Log.d("PermissionHandler", "Media permissions granted, loading media files")
             try {
                 sorterViewModel.loadMediaFiles()
                 onPermissionsGranted()
@@ -63,7 +69,7 @@ fun PermissionHandler(
                 onPermissionsGranted()
             }
         } else {
-            Log.w("PermissionHandler", "Permissions denied")
+            Log.w("PermissionHandler", "Media permissions denied")
             onPermissionsDenied()
         }
     }
@@ -121,7 +127,7 @@ private fun PermissionDialog(
 
 
 fun checkMediaPermissions(context: Context): Boolean {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+    val mediaPermissionsGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         ContextCompat.checkSelfPermission(
             context,
             Manifest.permission.READ_MEDIA_IMAGES
@@ -136,15 +142,22 @@ fun checkMediaPermissions(context: Context): Boolean {
             Manifest.permission.READ_EXTERNAL_STORAGE
         ) == PackageManager.PERMISSION_GRANTED
     }
+    
+    // Note: Notification permission is not required for core functionality
+    // It's requested but not required for the app to work
+    return mediaPermissionsGranted
 }
 
 fun getRequiredPermissions(): Array<String> {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        arrayOf(
-            Manifest.permission.READ_MEDIA_IMAGES,
-            Manifest.permission.READ_MEDIA_VIDEO
-        )
+    val permissions = mutableListOf<String>()
+    
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        permissions.add(Manifest.permission.READ_MEDIA_IMAGES)
+        permissions.add(Manifest.permission.READ_MEDIA_VIDEO)
+        permissions.add(Manifest.permission.POST_NOTIFICATIONS)
     } else {
-        arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+        permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
     }
+    
+    return permissions.toTypedArray()
 }

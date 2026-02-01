@@ -203,12 +203,8 @@ private fun OnboardScreen(
 	TutorialScreen(
 		onGetStarted = {
 			settingsViewModel.markTutorialCompleted()
-			if (hasPermissions) {
-				onNavigate(NavigationAction.NavigateTo(Screen.Sorter))
-			} else {
-				onRequestPermissions()
-				onNavigate(NavigationAction.NavigateTo(Screen.Sorter))
-			}
+			if (!hasPermissions) onRequestPermissions()
+			onNavigate(NavigationAction.NavigateTo(Screen.Sorter))
 		})
 }
 
@@ -274,10 +270,11 @@ private fun SettingsScreenWrapper(
 			val version = updateCheckResult?.updateInfo?.versionName ?: ""
 			context.getString(R.string.update_check_available, version)
 		}
+
 		updateCheckResult?.message != null -> updateCheckResult?.message
 		else -> null
 	}
-	
+
 	SettingsScreen(
 		appTheme = getThemeString(appSettings.themeMode),
 		isMaterialYouEnabled = appSettings.useDynamicColors,
@@ -298,7 +295,7 @@ private fun SettingsScreenWrapper(
 		onResetViewedHistory = { settingsViewModel.resetViewedHistory() },
 		onBack = { onNavigate(NavigationAction.NavigateBack) },
 		onCheckForUpdates = { updateViewModel.checkForUpdates(forceCheck = true) },
-		onDismissUpdateMessage = {  })
+		onDismissUpdateMessage = { })
 }
 
 private fun getThemeString(themeMode: ThemeMode): String {
