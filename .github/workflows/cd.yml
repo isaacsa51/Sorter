@@ -30,6 +30,7 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
       release_type: ${{ steps.version.outputs.release_type }}
+      build_type: ${{ steps.build_type.outputs.build_type }}
 
     steps:
       - name: Checkout code
@@ -73,34 +74,35 @@ jobs:
       - name: Run tests
         run: ./gradlew testDebugUnitTest --stacktrace
 
-      # For unsigned debug builds (no keystore required)
-      - name: Build Debug APK (unsigned)
-        if: steps.version.outputs.release_type != 'production'
-        run: ./gradlew assembleDebug --stacktrace
-
-      # For signed release builds (requires keystore setup)
-      - name: Decode Keystore
-        if: steps.version.outputs.release_type == 'production'
+      # Determine build type based on release type and keystore availability
+      - name: Determine build type
+        id: build_type
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_FILE }}
         run: |
-          if [ -n "$KEYSTORE_BASE64" ]; then
+          if [ "${{ steps.version.outputs.release_type }}" != "production" ]; then
+            echo "Building debug APK for ${{ steps.version.outputs.release_type }} release"
+            echo "BUILD_TYPE=debug" >> $GITHUB_ENV
+            echo "build_type=debug" >> $GITHUB_OUTPUT
+          elif [ -n "$KEYSTORE_BASE64" ]; then
+            echo "Keystore found, will build signed release APK"
             echo $KEYSTORE_BASE64 | base64 --decode > $GITHUB_WORKSPACE/keystore.jks
-            echo "KEYSTORE_EXISTS=true" >> $GITHUB_ENV
+            echo "BUILD_TYPE=release_signed" >> $GITHUB_ENV
+            echo "build_type=release_signed" >> $GITHUB_OUTPUT
           else
-            echo "⚠️ No keystore configured, building unsigned release"
-            echo "KEYSTORE_EXISTS=false" >> $GITHUB_ENV
+            echo "⚠️ No keystore configured, will build debug APK instead"
+            echo "BUILD_TYPE=debug" >> $GITHUB_ENV
+            echo "build_type=debug" >> $GITHUB_OUTPUT
           fi
 
-      - name: Build Release APK
-        if: steps.version.outputs.release_type == 'production'
+      - name: Build APK
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          if [ -f "$GITHUB_WORKSPACE/keystore.jks" ] && [ -n "$KEYSTORE_PASSWORD" ]; then
-            echo "Building signed release APK..."
+          if [ "$BUILD_TYPE" == "release_signed" ]; then
+            echo "✅ Building SIGNED release APK for production..."
             ./gradlew assembleRelease \
               -Pandroid.injected.signing.store.file=$GITHUB_WORKSPACE/keystore.jks \
               -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
@@ -108,8 +110,8 @@ jobs:
               -Pandroid.injected.signing.key.password=$KEY_PASSWORD \
               --stacktrace
           else
-            echo "Building unsigned release APK..."
-            ./gradlew assembleRelease --stacktrace
+            echo "⚠️ Building DEBUG APK (installable but not production-signed)..."
+            ./gradlew assembleDebug --stacktrace
           fi
 
       - name: Clean up keystore
@@ -119,10 +121,14 @@ jobs:
       - name: Rename APK
         run: |
           cd app/build/outputs/apk
-          if [ "${{ steps.version.outputs.release_type }}" == "production" ]; then
+          if [ "${{ steps.version.outputs.release_type }}" == "production" ] && [ "$BUILD_TYPE" == "release_signed" ]; then
+            # Signed production release
             mv release/app-release.apk release/Sorter-v${{ steps.version.outputs.version }}.apk || true
-            mv release/app-release-unsigned.apk release/Sorter-v${{ steps.version.outputs.version }}-unsigned.apk || true
+          elif [ "${{ steps.version.outputs.release_type }}" == "production" ]; then
+            # Production without keystore (debug APK)
+            mv debug/app-debug.apk debug/Sorter-v${{ steps.version.outputs.version }}-debug.apk || true
           else
+            # Alpha/Beta releases (always debug)
             mv debug/app-debug.apk debug/Sorter-v${{ steps.version.outputs.version }}-${{ steps.version.outputs.release_type }}.apk || true
           fi
 
@@ -320,10 +326,15 @@ jobs:
             echo "**Minimum Android Version:** Android 12 (API 31)"
             echo ""
             
-            if [ "$RELEASE_TYPE" == "production" ]; then
+            # Check if this is a debug build
+            if [ "${{ needs.build-release.outputs.build_type }}" == "debug" ]; then
+              echo "> ⚠️ **Note**: This APK is signed with a debug certificate for testing purposes."
+              echo "> It is fully functional and can be installed on any Android device."
+              echo ""
+            elif [ "$RELEASE_TYPE" == "production" ]; then
               echo "### 🔐 Verification"
               echo ""
-              echo "This release is signed with our official keystore."
+              echo "✅ This release is signed with our official production keystore."
               echo ""
             fi
             
@@ -354,8 +365,13 @@ jobs:
             echo ""
             echo "- **Version:** v${{ needs.build-release.outputs.version }}"
             echo "- **Type:** ${{ needs.build-release.outputs.release_type }}"
+            echo "- **Build Type:** ${{ needs.build-release.outputs.build_type }}"
             echo "- **Release URL:** https://github.com/${{ github.repository }}/releases/tag/v${{ needs.build-release.outputs.version }}"
             echo ""
+            if [ "${{ needs.build-release.outputs.build_type }}" == "debug" ]; then
+              echo "⚠️ **Note:** This release contains a DEBUG APK (no production keystore configured)"
+              echo ""
+            fi
             echo "### 📦 Artifacts"
             ls -lh ./release-artifacts/**/*.apk | awk '{print "- " $9 " (" $5 ")"}'
           } >> $GITHUB_STEP_SUMMARY
