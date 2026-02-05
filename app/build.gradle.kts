@@ -10,27 +10,32 @@ plugins {
 
 android {
     namespace = "com.serranoie.app.media.sorter"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.serranoie.app.media.sorter"
         minSdk = 31
         targetSdk = 36
-        versionCode = 1013
-        versionName = "1.0.13"
+        versionCode = 1014
+        versionName = "1.0.14"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
+        getByName("debug") {
+            // Debug builds use the default debug signing config
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+        }
+        
         release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
