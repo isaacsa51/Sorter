@@ -25,8 +25,8 @@ import com.serranoie.app.media.sorter.presentation.navigation.PermissionHandler
 import com.serranoie.app.media.sorter.presentation.settings.SettingsViewModel
 import com.serranoie.app.media.sorter.presentation.sorter.SorterViewModel
 import com.serranoie.app.media.sorter.presentation.update.UpdateViewModel
-import com.serranoie.app.media.sorter.ui.components.UpdateDialog
-import com.serranoie.app.media.sorter.ui.theme.SorterTheme
+import com.serranoie.app.media.sorter.presentation.ui.components.UpdateDialog
+import com.serranoie.app.media.sorter.presentation.ui.theme.SorterTheme
 import com.serranoie.app.media.sorter.work.UpdateCheckWorker
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
