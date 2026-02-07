@@ -48,6 +48,12 @@ android {
     buildFeatures {
         compose = true
     }
+    
+    testOptions {
+        unitTests {
+            isReturnDefaultValues = true
+        }
+    }
 }
 
 dependencies {
@@ -64,7 +70,15 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.material3)
 	implementation(libs.androidx.work.runtime.ktx)
+	// Unit Testing
 	testImplementation(libs.junit)
+	testImplementation("io.mockk:mockk:1.13.14")
+	testImplementation("io.mockk:mockk-android:1.13.14")
+	testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
+	testImplementation("androidx.arch.core:core-testing:2.2.0")
+	testImplementation("app.cash.turbine:turbine:1.2.0")
+	
+	// UI Testing
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
