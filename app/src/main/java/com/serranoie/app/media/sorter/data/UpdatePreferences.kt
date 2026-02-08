@@ -1,6 +1,7 @@
 package com.serranoie.app.media.sorter.data
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -12,7 +13,8 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
-private val Context.updateDataStore: DataStore<Preferences> by preferencesDataStore(name = "update_store")
+@VisibleForTesting
+val Context.updateDataStore: DataStore<Preferences> by preferencesDataStore(name = "update_store")
 
 @Singleton
 class UpdatePreferences @Inject constructor(

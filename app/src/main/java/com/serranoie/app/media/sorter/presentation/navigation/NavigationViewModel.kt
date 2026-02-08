@@ -25,7 +25,14 @@ class NavigationViewModel @Inject constructor(
 		viewModelScope.launch {
 			getAppSettings().collect { settings ->
 				tutorialCompleted = settings.tutorialCompleted
-				if (settings.tutorialCompleted && _navigationState.value.currentScreen == Screen.Onboard) {
+
+				if (!_navigationState.value.isReady) {
+					// First emission: determine the correct start screen
+					val startScreen = if (settings.tutorialCompleted) Screen.Sorter else Screen.Onboard
+					_navigationState.update {
+						it.copy(currentScreen = startScreen, isReady = true)
+					}
+				} else if (settings.tutorialCompleted && _navigationState.value.currentScreen == Screen.Onboard) {
 					navigateTo(Screen.Sorter)
 				}
 			}

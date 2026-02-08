@@ -22,8 +22,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.serranoie.app.media.sorter.presentation.model.MediaFileUi
-import com.serranoie.app.media.sorter.ui.theme.AureaSpacing
-import com.serranoie.app.media.sorter.ui.theme.components.*
+import com.serranoie.app.media.sorter.presentation.ui.theme.AureaSpacing
+import com.serranoie.app.media.sorter.presentation.ui.theme.components.FileInfo
+import com.serranoie.app.media.sorter.presentation.ui.theme.components.GestureGradient
+import com.serranoie.app.media.sorter.presentation.ui.theme.components.GestureIndicator
+import com.serranoie.app.media.sorter.presentation.ui.theme.components.MediaContent
+import com.serranoie.app.media.sorter.presentation.ui.theme.components.MediaInfoOverlay
+import com.serranoie.app.media.sorter.presentation.ui.theme.components.MediaTypeBadge
+import com.serranoie.app.media.sorter.presentation.ui.theme.components.VideoPlayer
 import ir.mahozad.multiplatform.wavyslider.WaveDirection
 import ir.mahozad.multiplatform.wavyslider.material3.WavySlider as WavySlider3
 import kotlinx.coroutines.CoroutineScope

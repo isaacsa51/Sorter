@@ -3,7 +3,8 @@ package com.serranoie.app.media.sorter.presentation.navigation
 data class NavigationState(
     val currentScreen: Screen = Screen.Onboard,
     val hasPermissions: Boolean = false,
-    val showPermissionDialog: Boolean = false
+    val showPermissionDialog: Boolean = false,
+    val isReady: Boolean = false
 )
 
 sealed class NavigationAction {

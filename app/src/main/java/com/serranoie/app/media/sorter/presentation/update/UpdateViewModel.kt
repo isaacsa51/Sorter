@@ -2,10 +2,7 @@ package com.serranoie.app.media.sorter.presentation.update
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.serranoie.app.media.sorter.update.UpdateManager
-import com.serranoie.app.media.sorter.update.UpdateCheckResponse
-import com.serranoie.app.media.sorter.update.model.UpdateInfo
-import com.serranoie.app.media.sorter.update.model.Version
+import com.serranoie.app.media.sorter.data.update.model.UpdateInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow

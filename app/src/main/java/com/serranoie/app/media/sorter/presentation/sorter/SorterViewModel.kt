@@ -4,10 +4,10 @@ import android.content.ContentUris
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.serranoie.app.media.sorter.domain.DeleteMediaUseCase
-import com.serranoie.app.media.sorter.domain.GetMediaRandomBatchesUseCase
+import com.serranoie.app.media.sorter.domain.media.DeleteMediaUseCase
+import com.serranoie.app.media.sorter.domain.media.GetMediaRandomBatchesUseCase
 import com.serranoie.app.media.sorter.domain.Result
-import com.serranoie.app.media.sorter.domain.SorterMediaUseCase
+import com.serranoie.app.media.sorter.domain.media.SorterMediaUseCase
 import com.serranoie.app.media.sorter.domain.UndoManager
 import com.serranoie.app.media.sorter.domain.repository.MediaRepository
 import com.serranoie.app.media.sorter.presentation.mapper.MediaFileMapper

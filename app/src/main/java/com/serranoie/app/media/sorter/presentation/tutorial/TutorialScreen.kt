@@ -21,6 +21,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -30,12 +31,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.serranoie.app.media.sorter.R
 import com.serranoie.app.media.sorter.presentation.sorter.SwipeableCard
-import com.serranoie.app.media.sorter.ui.theme.components.FileInfo
-import com.serranoie.app.media.sorter.ui.theme.components.GestureIndicator
-import com.serranoie.app.media.sorter.ui.theme.components.MediaInfoOverlay
-import com.serranoie.app.media.sorter.ui.theme.util.DevicePreview
-import com.serranoie.app.media.sorter.ui.theme.util.PreviewWrapper
-import com.serranoie.app.media.sorter.ui.theme.AureaSpacing
+import com.serranoie.app.media.sorter.presentation.ui.theme.components.FileInfo
+import com.serranoie.app.media.sorter.presentation.ui.theme.components.GestureIndicator
+import com.serranoie.app.media.sorter.presentation.ui.theme.components.MediaInfoOverlay
+import com.serranoie.app.media.sorter.presentation.ui.theme.util.DevicePreview
+import com.serranoie.app.media.sorter.presentation.ui.theme.util.PreviewWrapper
+import com.serranoie.app.media.sorter.presentation.ui.theme.AureaSpacing
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -113,7 +114,9 @@ fun TutorialScreen(
 	}
 
 	Scaffold(
-		modifier = Modifier.fillMaxSize(),
+		modifier = Modifier
+			.fillMaxSize()
+			.testTag("TutorialScreen"),
 	) { innerPadding ->
 		Box(
 			modifier = Modifier
@@ -249,7 +252,8 @@ fun TutorialScreen(
 				Button(
 					modifier = Modifier
 						.fillMaxWidth()
-						.height(56.dp),
+						.height(56.dp)
+						.testTag("TutorialGetStartedButton"),
 					colors = ButtonDefaults.buttonColors(
 						containerColor = colorScheme.primary
 					),

@@ -12,8 +12,8 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.serranoie.app.media.sorter.MainActivity
 import com.serranoie.app.media.sorter.R
-import com.serranoie.app.media.sorter.update.UpdateManager
-import com.serranoie.app.media.sorter.update.UpdateCheckResponse
+import com.serranoie.app.media.sorter.presentation.update.UpdateManager
+import com.serranoie.app.media.sorter.presentation.update.UpdateCheckResponse
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
