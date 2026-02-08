@@ -111,7 +111,7 @@ dependencies {
 	implementation(libs.androidx.hilt.navigation.compose)
 	
 	// Hilt Work integration
-	ksp(libs.androidx.hilt.compiler)
+	kapt(libs.androidx.hilt.compiler)
 	implementation(libs.androidx.hilt.work)
 
 	// Update checking dependencies

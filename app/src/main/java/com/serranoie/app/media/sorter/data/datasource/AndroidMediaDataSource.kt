@@ -29,6 +29,27 @@ class AndroidMediaDataSource @Inject constructor(
 		private const val TAG = "AndroidMediaDataSource"
 	}
 
+	/**
+	 * `Build.VERSION.SDK_INT` is a static final field and is not reliably mockable in JVM unit tests.
+	 * This override exists to keep `testDebugUnitTest` stable without Robolectric.
+	 */
+	internal var sdkIntOverride: Int? = null
+
+	/**
+	 * `MediaStore.*.EXTERNAL_CONTENT_URI` is not reliably usable in JVM unit tests (no Android runtime).
+	 * Allow tests to inject a mocked base Uri to keep `testDebugUnitTest` stable without Robolectric.
+	 */
+	internal var imagesContentUriOverride: Uri? = null
+	internal var videosContentUriOverride: Uri? = null
+
+	private fun sdkInt(): Int = sdkIntOverride ?: Build.VERSION.SDK_INT
+
+	private fun imagesContentUri(): Uri =
+		imagesContentUriOverride ?: MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+
+	private fun videosContentUri(): Uri =
+		videosContentUriOverride ?: MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+
 	override suspend fun fetchImages(): Result<List<MediaFile>> = withContext(Dispatchers.IO) {
 		try {
 			val projection = arrayOf(
@@ -47,7 +68,7 @@ class AndroidMediaDataSource @Inject constructor(
 			val sortOrder = "${MediaStore.Images.Media.DATE_TAKEN} DESC"
 
 			fetchMediaGeneric(
-				contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+				contentUri = imagesContentUri(),
 				projection = projection,
 				sortOrder = sortOrder,
 				mediaType = "image"
@@ -82,7 +103,7 @@ class AndroidMediaDataSource @Inject constructor(
 			val sortOrder = "${MediaStore.Video.Media.DATE_TAKEN} DESC"
 
 			fetchMediaGeneric(
-				contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+				contentUri = videosContentUri(),
 				projection = projection,
 				sortOrder = sortOrder,
 				mediaType = "video"
@@ -128,8 +149,13 @@ class AndroidMediaDataSource @Inject constructor(
 	override suspend fun deleteMultipleMedia(uris: List<Uri>): Result<Int> =
 		withContext(Dispatchers.IO) {
 			try {
+				if (uris.isEmpty()) {
+					return@withContext 0.asSuccess()
+				}
+
 				var successCount = 0
 				var failureCount = 0
+				var permissionFailureCount = 0
 				val pendingUris = mutableListOf<Uri>()
 
 				uris.forEach { uri ->
@@ -143,9 +169,11 @@ class AndroidMediaDataSource @Inject constructor(
 					} catch (e: RecoverableSecurityException) {
 						Log.e(TAG, "RecoverableSecurityException for $uri, needs user permission, exception: $e")
 						pendingUris.add(uri)
+						permissionFailureCount++
 						failureCount++
 					} catch (e: SecurityException) {
 						Log.e(TAG, "SecurityException for $uri", e)
+						permissionFailureCount++
 						failureCount++
 					} catch (e: Exception) {
 						Log.e(TAG, "Failed to delete $uri", e)
@@ -158,11 +186,8 @@ class AndroidMediaDataSource @Inject constructor(
 					"Deleted $successCount of ${uris.size} media files ($failureCount failed, ${pendingUris.size} need permission)"
 				)
 
-				if (successCount == 0 && pendingUris.size == uris.size) {
-					Log.d(
-						TAG,
-						"All files need user permission, returning error to trigger permission request"
-					)
+				return@withContext if (successCount == 0 && permissionFailureCount == uris.size) {
+					Log.d(TAG, "All files require permission, returning PermissionError")
 					AppError.PermissionError().asError()
 				} else {
 					successCount.asSuccess()
@@ -178,10 +203,10 @@ class AndroidMediaDataSource @Inject constructor(
 		}
 
 	override fun createDeleteRequest(uris: List<Uri>): android.app.PendingIntent? {
-		return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+		return if (sdkInt() >= Build.VERSION_CODES.R) {
 			Log.d(TAG, "Creating delete request for ${uris.size} files (Android 11+)")
 			MediaStore.createDeleteRequest(context.contentResolver, uris)
-		} else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+		} else if (sdkInt() >= Build.VERSION_CODES.Q) {
 			Log.d(TAG, "Creating delete request for ${uris.size} files (Android 10)")
 			MediaStore.createDeleteRequest(context.contentResolver, uris)
 		} else {
@@ -191,7 +216,7 @@ class AndroidMediaDataSource @Inject constructor(
 	}
 
 	override fun createTrashRequest(uris: List<Uri>): android.app.PendingIntent? {
-		return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+		return if (sdkInt() >= Build.VERSION_CODES.R) {
 			try {
 				Log.d(TAG, "Creating trash request for ${uris.size} files (moves to trash bin)")
 				MediaStore.createTrashRequest(context.contentResolver, uris, true)
@@ -212,7 +237,7 @@ class AndroidMediaDataSource @Inject constructor(
 		Log.d(TAG, "Creating deletion request for ${uris.size} files (useTrash: $useTrash)")
 
 		// If user wants to use trash and we're on Android 11+, try trash first
-		if (useTrash && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+		if (useTrash && sdkInt() >= Build.VERSION_CODES.R) {
 			val trashRequest = createTrashRequest(uris)
 			if (trashRequest != null) {
 				Log.d(TAG, "Using trash request (files will be recoverable for 30 days)")
@@ -241,16 +266,15 @@ class AndroidMediaDataSource @Inject constructor(
 	): Result<List<MediaFile>> {
 		val mediaFiles = mutableListOf<MediaFile>()
 
-		try {
-			val cursor: Cursor? = context.contentResolver.query(
-				contentUri,
-				projection,
-				null,
-				null,
-				sortOrder
-			)
+		val cursor: Cursor? = context.contentResolver.query(
+			contentUri,
+			projection,
+			null,
+			null,
+			sortOrder
+		)
 
-			cursor?.use {
+		cursor?.use {
 			val idColumn = it.getColumnIndexOrThrow(projection[0])
 			val nameColumn = it.getColumnIndexOrThrow(projection[1])
 			val sizeColumn = it.getColumnIndexOrThrow(projection[2])
@@ -286,7 +310,7 @@ class AndroidMediaDataSource @Inject constructor(
 						System.currentTimeMillis()
 					}
 				}
-				
+
 				val fileDate = Instant.ofEpochMilli(timestamp)
 					.atZone(ZoneId.systemDefault())
 					.toLocalDate()
@@ -307,15 +331,10 @@ class AndroidMediaDataSource @Inject constructor(
 			}
 		}
 
-			return if (mediaFiles.isEmpty()) {
-				AppError.NoMediaFoundError().asError()
-			} else {
-				mediaFiles.asSuccess()
-			}
-
-		} catch (e: Exception) {
-			Log.e(TAG, "Error in fetchMediaGeneric", e)
-			return AppError.fromThrowable(e).asError()
+		return if (mediaFiles.isEmpty()) {
+			AppError.NoMediaFoundError().asError()
+		} else {
+			mediaFiles.asSuccess()
 		}
 	}
 }

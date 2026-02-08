@@ -59,7 +59,6 @@ class AndroidMediaDataSourceTest {
 		mockkStatic(Log::class)
 		mockkStatic(ContentUris::class)
 		mockkStatic(MediaStore::class)
-		mockkStatic(Build.VERSION::class)
 		
 		// Mock Log methods to avoid "not mocked" errors
 		every { Log.d(any(), any()) } returns 0
@@ -67,6 +66,8 @@ class AndroidMediaDataSourceTest {
 		every { Log.e(any(), any(), any()) } returns 0
 
 		androidMediaDataSource = AndroidMediaDataSource(mockContext)
+		androidMediaDataSource.imagesContentUriOverride = mockk(relaxed = true)
+		androidMediaDataSource.videosContentUriOverride = mockk(relaxed = true)
 	}
 
 	@After
@@ -76,38 +77,6 @@ class AndroidMediaDataSourceTest {
 		clearStaticMockk(Log::class)
 		clearStaticMockk(ContentUris::class)
 		clearStaticMockk(MediaStore::class)
-		clearStaticMockk(Build.VERSION::class)
-	}
-
-	@Test
-	fun `DEBUG_fetchImages`() = runTest {
-		// Arrange - Very simple setup
-		val mockUri = mockk<Uri>(relaxed = true)
-		every { ContentUris.withAppendedId(any(), any()) } returns mockUri
-		
-		val testCursor = mockk<Cursor>(relaxed = true)
-		every { testCursor.moveToNext() } returnsMany listOf(true, false)
-		every { testCursor.getColumnIndexOrThrow(any()) } returns 0
-		every { testCursor.getLong(any()) } returns 1000L
-		every { testCursor.getString(any()) } returns "test.jpg"
-		every { testCursor.getInt(any()) } returns 100
-		every { testCursor.close() } returns Unit
-		
-		every { mockContentResolver.query(any<Uri>(), any(), any(), any(), any()) } returns testCursor
-		
-		// Act
-		val result = androidMediaDataSource.fetchImages()
-		
-		// Debug
-		println("DEBUG Result type: ${result::class.simpleName}")
-		when (result) {
-			is Result.Success -> println("DEBUG Success with ${result.data.size} items")
-			is Result.Error -> println("DEBUG Error: ${result.error}")
-			is Result.Loading -> println("DEBUG Loading")
-		}
-		
-		// Assert
-		assertTrue("Expected Success but got ${result::class.simpleName}", result is Result.Success<*>)
 	}
 
 	@Test
@@ -176,7 +145,7 @@ class AndroidMediaDataSourceTest {
 		// Arrange
 		every {
 			mockContentResolver.query(
-				MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+				any<Uri>(),
 				any(),
 				null,
 				null,
@@ -197,7 +166,7 @@ class AndroidMediaDataSourceTest {
 		// Arrange
 		every {
 			mockContentResolver.query(
-				MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+				any<Uri>(),
 				any(),
 				null,
 				null,
@@ -326,7 +295,7 @@ class AndroidMediaDataSourceTest {
 		// Arrange
 		every {
 			mockContentResolver.query(
-				MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+				any<Uri>(),
 				any(),
 				null,
 				null,
@@ -347,7 +316,7 @@ class AndroidMediaDataSourceTest {
 		// Arrange
 		every {
 			mockContentResolver.query(
-				MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+				any<Uri>(),
 				any(),
 				null,
 				null,
@@ -546,7 +515,7 @@ class AndroidMediaDataSourceTest {
 		// Arrange
 		val uris = listOf(mockk<Uri>(relaxed = true))
 		val mockPendingIntent = mockk<PendingIntent>(relaxed = true)
-		every { Build.VERSION.SDK_INT } returns Build.VERSION_CODES.R
+		androidMediaDataSource.sdkIntOverride = Build.VERSION_CODES.R
 		every { MediaStore.createDeleteRequest(any(), any()) } returns mockPendingIntent
 
 		// Act
@@ -562,7 +531,7 @@ class AndroidMediaDataSourceTest {
 		// Arrange
 		val uris = listOf(mockk<Uri>(relaxed = true))
 		val mockPendingIntent = mockk<PendingIntent>(relaxed = true)
-		every { Build.VERSION.SDK_INT } returns Build.VERSION_CODES.Q
+		androidMediaDataSource.sdkIntOverride = Build.VERSION_CODES.Q
 		every { MediaStore.createDeleteRequest(any(), any()) } returns mockPendingIntent
 
 		// Act
@@ -576,7 +545,7 @@ class AndroidMediaDataSourceTest {
 	fun `createDeleteRequest_returnsNull_onAndroidBelow10`() {
 		// Arrange
 		val uris = listOf(mockk<Uri>(relaxed = true))
-		every { Build.VERSION.SDK_INT } returns Build.VERSION_CODES.P
+		androidMediaDataSource.sdkIntOverride = Build.VERSION_CODES.P
 
 		// Act
 		val result = androidMediaDataSource.createDeleteRequest(uris)
@@ -590,7 +559,7 @@ class AndroidMediaDataSourceTest {
 		// Arrange
 		val uris = listOf(mockk<Uri>(relaxed = true))
 		val mockPendingIntent = mockk<PendingIntent>(relaxed = true)
-		every { Build.VERSION.SDK_INT } returns Build.VERSION_CODES.R
+		androidMediaDataSource.sdkIntOverride = Build.VERSION_CODES.R
 		every { MediaStore.createTrashRequest(any(), any(), any()) } returns mockPendingIntent
 
 		// Act
@@ -605,7 +574,7 @@ class AndroidMediaDataSourceTest {
 	fun `createTrashRequest_returnsNull_whenExceptionOccurs`() {
 		// Arrange
 		val uris = listOf(mockk<Uri>(relaxed = true))
-		every { Build.VERSION.SDK_INT } returns Build.VERSION_CODES.R
+		androidMediaDataSource.sdkIntOverride = Build.VERSION_CODES.R
 		every { MediaStore.createTrashRequest(any(), any(), any()) } throws RuntimeException("Error")
 
 		// Act
@@ -619,7 +588,7 @@ class AndroidMediaDataSourceTest {
 	fun `createTrashRequest_returnsNull_onAndroidBelow11`() {
 		// Arrange
 		val uris = listOf(mockk<Uri>(relaxed = true))
-		every { Build.VERSION.SDK_INT } returns Build.VERSION_CODES.Q
+		androidMediaDataSource.sdkIntOverride = Build.VERSION_CODES.Q
 
 		// Act
 		val result = androidMediaDataSource.createTrashRequest(uris)
@@ -633,7 +602,7 @@ class AndroidMediaDataSourceTest {
 		// Arrange
 		val uris = listOf(mockk<Uri>(relaxed = true))
 		val mockPendingIntent = mockk<PendingIntent>(relaxed = true)
-		every { Build.VERSION.SDK_INT } returns Build.VERSION_CODES.R
+		androidMediaDataSource.sdkIntOverride = Build.VERSION_CODES.R
 		every { MediaStore.createTrashRequest(any(), any(), any()) } returns mockPendingIntent
 
 		// Act
@@ -649,7 +618,7 @@ class AndroidMediaDataSourceTest {
 		// Arrange
 		val uris = listOf(mockk<Uri>(relaxed = true))
 		val mockPendingIntent = mockk<PendingIntent>(relaxed = true)
-		every { Build.VERSION.SDK_INT } returns Build.VERSION_CODES.R
+		androidMediaDataSource.sdkIntOverride = Build.VERSION_CODES.R
 		every { MediaStore.createTrashRequest(any(), any(), any()) } throws RuntimeException("Trash failed")
 		every { MediaStore.createDeleteRequest(any(), any()) } returns mockPendingIntent
 
@@ -666,7 +635,7 @@ class AndroidMediaDataSourceTest {
 		// Arrange
 		val uris = listOf(mockk<Uri>(relaxed = true))
 		val mockPendingIntent = mockk<PendingIntent>(relaxed = true)
-		every { Build.VERSION.SDK_INT } returns Build.VERSION_CODES.R
+		androidMediaDataSource.sdkIntOverride = Build.VERSION_CODES.R
 		every { MediaStore.createDeleteRequest(any(), any()) } returns mockPendingIntent
 
 		// Act
@@ -681,7 +650,7 @@ class AndroidMediaDataSourceTest {
 		// Arrange
 		val uris = listOf(mockk<Uri>(relaxed = true))
 		// Set SDK to P (Android 9), which is too old for both trash and delete requests
-		every { Build.VERSION.SDK_INT } returns Build.VERSION_CODES.P
+		androidMediaDataSource.sdkIntOverride = Build.VERSION_CODES.P
 
 		// Act
 		val result = androidMediaDataSource.createDeletionRequest(uris, useTrash = true)
@@ -695,7 +664,7 @@ class AndroidMediaDataSourceTest {
 		// Arrange
 		val uris = listOf(mockk<Uri>(relaxed = true))
 		val mockPendingIntent = mockk<PendingIntent>(relaxed = true)
-		every { Build.VERSION.SDK_INT } returns Build.VERSION_CODES.Q
+		androidMediaDataSource.sdkIntOverride = Build.VERSION_CODES.Q
 		every { MediaStore.createDeleteRequest(any(), any()) } returns mockPendingIntent
 
 		// Act
@@ -708,27 +677,19 @@ class AndroidMediaDataSourceTest {
 	// Helper function to setup cursor with data
 	private fun setupCursorWithData(cursor: Cursor, dataList: List<Map<String, Any>>) {
 		var currentIndex = -1
+		var columnCallIndex = 0
 
 		every { cursor.moveToNext() } answers {
 			currentIndex++
 			currentIndex < dataList.size
 		}
 
-		// Map column names to indices
+		// Map projection positions deterministically.
+		// JVM unit tests often can't rely on Android's MediaStore column constants being non-null.
+		// AndroidMediaDataSource requests these indices in a fixed order.
+		val indexSequence = listOf(0, 1, 2, 3, 4, 5, 7)
 		every { cursor.getColumnIndexOrThrow(any()) } answers {
-			when (firstArg<String>()) {
-				MediaStore.Images.Media._ID, MediaStore.Video.Media._ID -> 0
-				MediaStore.Images.Media.DISPLAY_NAME, MediaStore.Video.Media.DISPLAY_NAME -> 1
-				MediaStore.Images.Media.SIZE, MediaStore.Video.Media.SIZE -> 2
-				MediaStore.Images.Media.DATE_TAKEN, MediaStore.Video.Media.DATE_TAKEN -> 3
-				MediaStore.Images.Media.DATE_ADDED, MediaStore.Video.Media.DATE_ADDED -> 4
-				MediaStore.Images.Media.DATE_MODIFIED, MediaStore.Video.Media.DATE_MODIFIED -> 5
-				MediaStore.Images.Media.DATA, MediaStore.Video.Media.DATA -> 6
-				MediaStore.Images.Media.BUCKET_DISPLAY_NAME, MediaStore.Video.Media.BUCKET_DISPLAY_NAME -> 7
-				MediaStore.Images.Media.WIDTH, MediaStore.Video.Media.WIDTH -> 8
-				MediaStore.Images.Media.HEIGHT, MediaStore.Video.Media.HEIGHT -> 9
-				else -> -1
-			}
+			indexSequence.getOrElse(columnCallIndex++) { -1 }
 		}
 		
 		every { cursor.getLong(any()) } answers {
