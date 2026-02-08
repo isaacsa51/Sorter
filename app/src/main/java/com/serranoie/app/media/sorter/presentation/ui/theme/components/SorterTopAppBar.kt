@@ -25,7 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.serranoie.app.media.sorter.ui.theme.util.PreviewWrapper
+import com.serranoie.app.media.sorter.presentation.ui.theme.util.PreviewWrapper
 
 /**
  * Top app bar for the Sorter screen with date badge, background toggle, and grid view button

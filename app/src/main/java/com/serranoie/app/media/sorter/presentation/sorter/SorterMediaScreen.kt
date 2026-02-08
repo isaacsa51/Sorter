@@ -1,6 +1,5 @@
 package com.serranoie.app.media.sorter.presentation.sorter
 
-import android.R.attr.spacing
 import android.content.Intent
 import android.util.Log
 import androidx.compose.foundation.layout.*
@@ -13,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -24,26 +24,27 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.zIndex
-import com.serranoie.app.media.sorter.ui.theme.components.ActionFeedbackTint
-import com.serranoie.app.media.sorter.ui.theme.components.ActionType
-import com.serranoie.app.media.sorter.ui.theme.components.BlurredMediaBackground
-import com.serranoie.app.media.sorter.ui.theme.components.CompletionScreen
-import com.serranoie.app.media.sorter.ui.theme.components.FileInfo
-import com.serranoie.app.media.sorter.ui.theme.components.GestureGradient
-import com.serranoie.app.media.sorter.ui.theme.components.GestureIndicator
-import com.serranoie.app.media.sorter.ui.theme.components.MediaInfoOverlay
-import com.serranoie.app.media.sorter.ui.theme.components.MediaTypeBadge
-import com.serranoie.app.media.sorter.ui.theme.components.SorterTopAppBar
-import com.serranoie.app.media.sorter.ui.theme.components.VideoPlayer
-import com.serranoie.app.media.sorter.ui.theme.components.ZoomOverlay
-import com.serranoie.app.media.sorter.ui.theme.components.ZoomableMediaContent
 import com.serranoie.app.media.sorter.presentation.model.MediaFileUi
+import com.serranoie.app.media.sorter.presentation.ui.theme.AureaSpacing
+import com.serranoie.app.media.sorter.presentation.ui.theme.components.ActionFeedbackTint
+import com.serranoie.app.media.sorter.presentation.ui.theme.components.ActionType
+import com.serranoie.app.media.sorter.presentation.ui.theme.components.BlurredMediaBackground
+import com.serranoie.app.media.sorter.presentation.ui.theme.components.CompletionScreen
+import com.serranoie.app.media.sorter.presentation.ui.theme.components.FileInfo
+import com.serranoie.app.media.sorter.presentation.ui.theme.components.GestureGradient
+import com.serranoie.app.media.sorter.presentation.ui.theme.components.GestureIndicator
+import com.serranoie.app.media.sorter.presentation.ui.theme.components.MediaInfoOverlay
+import com.serranoie.app.media.sorter.presentation.ui.theme.components.MediaTypeBadge
+import com.serranoie.app.media.sorter.presentation.ui.theme.components.SorterTopAppBar
+import com.serranoie.app.media.sorter.presentation.ui.theme.components.VideoPlayer
+import com.serranoie.app.media.sorter.presentation.ui.theme.components.ZoomOverlay
+import com.serranoie.app.media.sorter.presentation.ui.theme.components.ZoomableMediaContent
+import com.serranoie.app.media.sorter.presentation.ui.theme.util.DevicePreview
+import com.serranoie.app.media.sorter.presentation.ui.theme.util.PreviewWrapper
 import ir.mahozad.multiplatform.wavyslider.WaveDirection
 import ir.mahozad.multiplatform.wavyslider.material3.WavySlider as WavySlider3
-import com.serranoie.app.media.sorter.ui.theme.util.DevicePreview
-import com.serranoie.app.media.sorter.ui.theme.util.PreviewWrapper
-import com.serranoie.app.media.sorter.ui.theme.AureaSpacing
 import kotlinx.coroutines.launch
+import androidx.activity.compose.BackHandler
 
 @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -58,7 +59,8 @@ fun SorterMediaScreen(
 	onUndoTrash: () -> Unit,
 	onBackToOnboarding: (() -> Unit)? = null,
 	onNavigateToReview: () -> Unit = {},
-	onNavigateToSettings: () -> Unit = {}
+	onNavigateToSettings: () -> Unit = {},
+	isLoading: Boolean = false
 ) {
 	val snackbarHostState = remember { SnackbarHostState() }
 	val scope = rememberCoroutineScope()
@@ -85,11 +87,15 @@ fun SorterMediaScreen(
 
 	// Animated values for gesture indicators
 	val keepIconAlpha = animateFloatAsState(keepProgress, animationSpec = tween(240)).value
-	val keepIconScale = animateFloatAsState(0.7f + 0.5f * keepProgress, animationSpec = tween(240)).value
-	val keepIconOffset = animateFloatAsState((-32f + 60f * keepProgress), animationSpec = tween(240)).value
+	val keepIconScale =
+		animateFloatAsState(0.7f + 0.5f * keepProgress, animationSpec = tween(240)).value
+	val keepIconOffset =
+		animateFloatAsState((-32f + 60f * keepProgress), animationSpec = tween(240)).value
 	val trashIconAlpha = animateFloatAsState(trashProgress, animationSpec = tween(240)).value
-	val trashIconScale = animateFloatAsState(0.7f + 0.5f * trashProgress, animationSpec = tween(240)).value
-	val trashIconOffset = animateFloatAsState((32f - 60f * trashProgress), animationSpec = tween(240)).value
+	val trashIconScale =
+		animateFloatAsState(0.7f + 0.5f * trashProgress, animationSpec = tween(240)).value
+	val trashIconOffset =
+		animateFloatAsState((32f - 60f * trashProgress), animationSpec = tween(240)).value
 
 	Scaffold(
 		modifier = Modifier.fillMaxSize(),
@@ -101,6 +107,13 @@ fun SorterMediaScreen(
 					.fillMaxSize()
 					.padding(innerPadding)
 			) {
+				// Show loading indicator if requested (while media is loading)
+				if (isLoading) {
+					Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+						CircularProgressIndicator()
+					}
+					return@Box // Ensure nothing else is composed while loading
+				}
 				BlurredMediaBackground(
 					uri = currentFile?.uri,
 					mediaType = currentFile?.mediaType ?: "image",
@@ -121,7 +134,8 @@ fun SorterMediaScreen(
 						deletedCount = deletedCount,
 						onReviewDeleted = onNavigateToReview,
 						onBackToTutorial = onBackToOnboarding,
-						onSettings = onNavigateToSettings
+						onSettings = onNavigateToSettings,
+						modifier = Modifier.testTag("CompletionScreen")
 					)
 				} else {
 					AnimatedVisibility(
@@ -151,7 +165,8 @@ fun SorterMediaScreen(
 									containerColor = colorScheme.errorContainer,
 									contentColor = colorScheme.error,
 									alpha = trashIconAlpha,
-									scale = trashIconScale
+									scale = trashIconScale,
+									modifier = Modifier.testTag("GestureIndicator")
 								)
 							}
 
@@ -227,6 +242,12 @@ fun SorterMediaScreen(
 													.zIndex(1f)
 													.align(Alignment.TopStart)
 													.padding(spacing.s)
+											)
+
+											Text(
+												text = currentFile.fileName,
+												style = MaterialTheme.typography.bodyMedium,
+												modifier = Modifier.testTag("MediaFileName")
 											)
 
 											if (currentFile.mediaType == "video") {
@@ -397,7 +418,8 @@ fun SorterMediaScreen(
 									containerColor = MaterialTheme.colorScheme.surface,
 									contentColor = Color(0xFF4CAF50),
 									alpha = keepIconAlpha,
-									scale = keepIconScale
+									scale = keepIconScale,
+									modifier = Modifier.testTag("KeepButton")
 								)
 							}
 
@@ -424,10 +446,14 @@ fun SorterMediaScreen(
 								modifier = Modifier
 									.fillMaxSize()
 									.zIndex(100f)
+									.testTag("ZoomOverlay")
 							)
 						}
 					}
 				}
+			}
+			BackHandler(enabled = isZoomed) {
+				isZoomed = false
 			}
 		}
 	}

@@ -12,8 +12,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.serranoie.app.media.sorter.ui.theme.util.ComponentPreview
-import com.serranoie.app.media.sorter.ui.theme.util.PreviewWrapper
+import com.serranoie.app.media.sorter.presentation.ui.theme.util.ComponentPreview
+import com.serranoie.app.media.sorter.presentation.ui.theme.util.PreviewWrapper
 
 /**
  * Badge component that displays the media type (e.g., JPG, MP4)

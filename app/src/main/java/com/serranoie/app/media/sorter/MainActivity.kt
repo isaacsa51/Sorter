@@ -7,12 +7,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.compose.LocalActivity
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.lifecycleScope
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -34,8 +36,17 @@ import java.util.concurrent.TimeUnit
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+	private val navigationViewModel: NavigationViewModel by viewModels()
+
 	override fun onCreate(savedInstanceState: Bundle?) {
+		val splashScreen = installSplashScreen()
 		super.onCreate(savedInstanceState)
+
+		splashScreen.setKeepOnScreenCondition {
+			!navigationViewModel.navigationState.value.isReady
+		}
+
 		enableEdgeToEdge()
 		setContent {
 			SorterApp(
@@ -99,27 +110,29 @@ fun SorterApp(intent: Intent? = null) {
 
 		val navigationState by navigationViewModel.navigationState.collectAsState()
 
-		val requestPermissions = PermissionHandler(
-			showPermissionDialog = navigationState.showPermissionDialog,
-			sorterViewModel = sorterViewModel,
-			onPermissionsGranted = {
-				navigationViewModel.updatePermissions(true)
-			},
-			onPermissionsDenied = {
-				navigationViewModel.showPermissionDialog(true)
-			},
-			onDismissDialog = {
-				navigationViewModel.showPermissionDialog(false)
-			})
+		if (navigationState.isReady) {
+			val requestPermissions = PermissionHandler(
+				showPermissionDialog = navigationState.showPermissionDialog,
+				sorterViewModel = sorterViewModel,
+				onPermissionsGranted = {
+					navigationViewModel.updatePermissions(true)
+				},
+				onPermissionsDenied = {
+					navigationViewModel.showPermissionDialog(true)
+				},
+				onDismissDialog = {
+					navigationViewModel.showPermissionDialog(false)
+				})
 
-		AppNavHost(
-			currentScreen = navigationState.currentScreen,
-			appSettings = appSettings,
-			hasPermissions = navigationState.hasPermissions,
-			onRequestPermissions = requestPermissions,
-			onNavigate = { action ->
-				navigationViewModel.handleAction(action)
-			})
+			AppNavHost(
+				currentScreen = navigationState.currentScreen,
+				appSettings = appSettings,
+				hasPermissions = navigationState.hasPermissions,
+				onRequestPermissions = requestPermissions,
+				onNavigate = { action ->
+					navigationViewModel.handleAction(action)
+				})
+		}
 
 		if (showUpdateDialog && updateCheckResult?.updateInfo != null) {
 			val updateInfo = updateCheckResult!!.updateInfo!!

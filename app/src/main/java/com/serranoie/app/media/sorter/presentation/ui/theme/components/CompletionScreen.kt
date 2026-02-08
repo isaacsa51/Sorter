@@ -16,8 +16,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.serranoie.app.media.sorter.R
-import com.serranoie.app.media.sorter.ui.theme.SorterTheme
-import com.serranoie.app.media.sorter.ui.theme.util.DevicePreview
+import com.serranoie.app.media.sorter.presentation.ui.theme.SorterTheme
+import com.serranoie.app.media.sorter.presentation.ui.theme.util.DevicePreview
 
 /**
  * Completion screen shown when all media files have been sorted

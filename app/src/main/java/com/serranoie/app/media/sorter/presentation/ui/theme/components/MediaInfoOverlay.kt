@@ -33,9 +33,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.serranoie.app.media.sorter.R
-import com.serranoie.app.media.sorter.ui.theme.util.ComponentPreview
-import com.serranoie.app.media.sorter.ui.theme.util.PreviewWrapper
-import com.serranoie.app.media.sorter.ui.theme.AureaSpacing
+import com.serranoie.app.media.sorter.presentation.ui.theme.util.ComponentPreview
+import com.serranoie.app.media.sorter.presentation.ui.theme.util.PreviewWrapper
+import com.serranoie.app.media.sorter.presentation.ui.theme.AureaSpacing
 
 /**
  * Overlay component that displays file information and action buttons at the bottom
@@ -152,7 +152,7 @@ private fun SharedTransitionScope.ExpandedInfoContent(
     onExpandToggle: () -> Unit,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
-    spacing: com.serranoie.app.media.sorter.ui.theme.PhiSpacing,
+    spacing: com.serranoie.app.media.sorter.presentation.ui.theme.PhiSpacing,
     cornerRadius: androidx.compose.ui.unit.Dp
 ) {
     with(sharedTransitionScope) {

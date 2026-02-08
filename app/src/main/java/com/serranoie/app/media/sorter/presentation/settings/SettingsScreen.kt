@@ -53,18 +53,19 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.testTag
 import com.serranoie.app.media.sorter.R
 import com.serranoie.app.media.sorter.presentation.util.Utils
 import com.serranoie.app.media.sorter.presentation.util.Utils.strongHapticFeedback
 import com.serranoie.app.media.sorter.presentation.util.Utils.toggleFeedback
 import com.serranoie.app.media.sorter.presentation.util.Utils.weakHapticFeedback
-import com.serranoie.app.media.sorter.ui.theme.AureaSpacing
-import com.serranoie.app.media.sorter.ui.theme.components.CustomPaddedExpandableItem
-import com.serranoie.app.media.sorter.ui.theme.components.CustomPaddedListItem
-import com.serranoie.app.media.sorter.ui.theme.components.PaddedListGroup
-import com.serranoie.app.media.sorter.ui.theme.components.PaddedListItemPosition
-import com.serranoie.app.media.sorter.ui.theme.util.DevicePreview
-import com.serranoie.app.media.sorter.ui.theme.util.PreviewWrapper
+import com.serranoie.app.media.sorter.presentation.ui.theme.AureaSpacing
+import com.serranoie.app.media.sorter.presentation.ui.theme.components.CustomPaddedExpandableItem
+import com.serranoie.app.media.sorter.presentation.ui.theme.components.CustomPaddedListItem
+import com.serranoie.app.media.sorter.presentation.ui.theme.components.PaddedListGroup
+import com.serranoie.app.media.sorter.presentation.ui.theme.components.PaddedListItemPosition
+import com.serranoie.app.media.sorter.presentation.ui.theme.util.DevicePreview
+import com.serranoie.app.media.sorter.presentation.ui.theme.util.PreviewWrapper
 
 private const val DEFAULT_VERSION = "1.0"
 
@@ -123,7 +124,7 @@ fun SettingsScreen(
 						style = MaterialTheme.typography.titleLargeEmphasized,
 					)
 				}, navigationIcon = {
-					IconButton(onClick = onBack) {
+					IconButton(onClick = onBack, modifier = Modifier.testTag("SettingsBackButton")) {
 						Icon(
 							imageVector = Icons.Default.ArrowBack, contentDescription = stringResource(R.string.content_desc_back)
 						)
@@ -137,7 +138,8 @@ fun SettingsScreen(
 		LazyColumn(
 			modifier = Modifier
 				.fillMaxSize()
-				.padding(paddingValues),
+				.padding(paddingValues)
+				.testTag("SettingsScreen"),
 			contentPadding = PaddingValues(bottom = aureaSpacing.m)
 		) {
 			item {
@@ -148,7 +150,9 @@ fun SettingsScreen(
 						onClick = {
 							showThemeDialog = true
 							view.weakHapticFeedback()
-						}, position = PaddedListItemPosition.First
+						},
+						position = PaddedListItemPosition.First,
+						modifier = Modifier.testTag("SettingsThemeItem")
 					) {
 						Icon(
 							imageVector = Icons.Default.Brightness4,
@@ -176,7 +180,9 @@ fun SettingsScreen(
 					}
 
 					CustomPaddedListItem(
-						onClick = onMaterialYouToggle, position = PaddedListItemPosition.Middle
+						onClick = onMaterialYouToggle,
+						position = PaddedListItemPosition.Middle,
+						modifier = Modifier.testTag("SettingsMaterialYouItem")
 					) {
 						Icon(
 							imageVector = Icons.Default.Palette,
@@ -200,14 +206,18 @@ fun SettingsScreen(
 							checked = isMaterialYouEnabled, onCheckedChange = {
 								onMaterialYouToggle()
 								view.toggleFeedback()
-							})
+							},
+							modifier = Modifier.testTag("SettingsMaterialYouSwitch")
+						)
 					}
 
 					CustomPaddedListItem(
 						onClick = {
 							onBlurredBackgroundToggle()
 							view.strongHapticFeedback()
-						}, position = PaddedListItemPosition.Last
+						},
+						position = PaddedListItemPosition.Last,
+						modifier = Modifier.testTag("SettingsBlurBackgroundItem")
 					) {
 						Icon(
 							imageVector = Icons.Default.Brightness4,
@@ -241,7 +251,9 @@ fun SettingsScreen(
 					title = stringResource(R.string.settings_behaviour_title)
 				) {
 					CustomPaddedListItem(
-						onClick = onAutoPlayToggle, position = PaddedListItemPosition.First
+						onClick = onAutoPlayToggle,
+						position = PaddedListItemPosition.First,
+						modifier = Modifier.testTag("SettingsAutoplayItem")
 					) {
 						Icon(
 							imageVector = Icons.Default.PlayArrow,
@@ -265,14 +277,18 @@ fun SettingsScreen(
 							checked = isAutoPlayEnabled, onCheckedChange = {
 								onAutoPlayToggle()
 								view.toggleFeedback()
-							})
+							},
+							modifier = Modifier.testTag("SettingsAutoplaySwitch")
+						)
 					}
 					
 					CustomPaddedListItem(
 						onClick = {
 							onResetViewedHistory()
 							view.strongHapticFeedback()
-						}, position = PaddedListItemPosition.Last
+						},
+						position = PaddedListItemPosition.Last,
+						modifier = Modifier.testTag("SettingsResetViewedHistoryItem")
 					) {
 						Icon(
 							imageVector = Icons.Default.Refresh,
@@ -307,6 +323,7 @@ fun SettingsScreen(
 							view.weakHapticFeedback()
 						},
 						position = PaddedListItemPosition.Single,
+						modifier = Modifier.testTag("SettingsStorageExpandableItem"),
 						defaultContent = {
 							Icon(
 								imageVector = Icons.Rounded.Storage,
@@ -331,7 +348,10 @@ fun SettingsScreen(
 								checked = syncFileToTrashBin, onCheckedChange = {
 									onSyncFileToTrashBinToggle()
 									view.toggleFeedback()
-								}, modifier = Modifier.padding(end = aureaSpacing.xs)
+								},
+								modifier = Modifier
+									.padding(end = aureaSpacing.xs)
+									.testTag("SettingsSyncTrashSwitch")
 							)
 						},
 						expandedContent = {
@@ -430,7 +450,9 @@ fun SettingsScreen(
 						onClick = {
 							Utils.openWebLink(context, "https://www.github.com/isaacsa51/Sorter")
 							view.weakHapticFeedback()
-						}, position = PaddedListItemPosition.Middle
+						},
+						position = PaddedListItemPosition.Middle,
+						modifier = Modifier.testTag("SettingsCheckUpdatesItem")
 					) {
 						Icon(
 							imageVector = Icons.Default.Policy,
@@ -541,7 +563,9 @@ fun SettingsScreen(
 						onClick = {
 							onResetTutorial()
 							view.toggleFeedback()
-						}, position = PaddedListItemPosition.Single
+						},
+						position = PaddedListItemPosition.Single,
+						modifier = Modifier.testTag("SettingsResetTutorialItem")
 					) {
 						Icon(
 							imageVector = Icons.Default.Refresh,

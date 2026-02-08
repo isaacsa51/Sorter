@@ -41,8 +41,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.serranoie.app.media.sorter.ui.theme.util.ComponentPreview
-import com.serranoie.app.media.sorter.ui.theme.util.PreviewWrapper
+import com.serranoie.app.media.sorter.presentation.ui.theme.util.ComponentPreview
+import com.serranoie.app.media.sorter.presentation.ui.theme.util.PreviewWrapper
 
 /**
  * A flexible settings group container that can hold any composable content.
@@ -267,6 +267,7 @@ fun PaddedListItem(
 fun CustomPaddedListItem(
 	onClick: () -> Unit,
 	position: PaddedListItemPosition = PaddedListItemPosition.Middle,
+	modifier: Modifier = Modifier,
 	content: @Composable RowScope.() -> Unit
 ) {
 	val shape = when (position) {
@@ -286,7 +287,7 @@ fun CustomPaddedListItem(
 		shape = shape,
 		tonalElevation = 4.dp,
 		color = MaterialTheme.colorScheme.surfaceContainer,
-		modifier = Modifier
+		modifier = modifier
 			.fillMaxWidth()
 			.clip(shape)
 	) {
@@ -313,6 +314,7 @@ fun CustomPaddedExpandableItem(
 	isExpanded: Boolean,
 	onToggleExpanded: () -> Unit,
 	position: PaddedListItemPosition = PaddedListItemPosition.Middle,
+	modifier: Modifier = Modifier,
 	defaultContent: @Composable RowScope.() -> Unit,
 	expandedContent: @Composable ColumnScope.() -> Unit
 ) {
@@ -333,7 +335,7 @@ fun CustomPaddedExpandableItem(
 		shape = shape,
 		tonalElevation = 4.dp,
 		color = MaterialTheme.colorScheme.surfaceContainer,
-		modifier = Modifier
+		modifier = modifier
 			.fillMaxWidth()
 			.clip(shape)
 	) {

@@ -79,6 +79,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -88,10 +89,10 @@ import coil.request.ImageRequest
 import com.serranoie.app.media.sorter.R
 import com.serranoie.app.media.sorter.domain.repository.MediaRepository
 import com.serranoie.app.media.sorter.presentation.model.MediaFileUi
-import com.serranoie.app.media.sorter.ui.theme.AureaSpacing
-import com.serranoie.app.media.sorter.ui.theme.components.GridZoomLevel
-import com.serranoie.app.media.sorter.ui.theme.components.PinchToZoomGridContainer
-import com.serranoie.app.media.sorter.ui.theme.components.detectPinchGestures
+import com.serranoie.app.media.sorter.presentation.ui.theme.AureaSpacing
+import com.serranoie.app.media.sorter.presentation.ui.theme.components.GridZoomLevel
+import com.serranoie.app.media.sorter.presentation.ui.theme.components.PinchToZoomGridContainer
+import com.serranoie.app.media.sorter.presentation.ui.theme.components.detectPinchGestures
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -147,6 +148,7 @@ fun ReviewScreen(
 			ExtendedFloatingActionButton(
 				onClick = { showDeleteConfirmDialog = true },
 				expanded = expandedFab,
+				modifier = Modifier.testTag("ReviewDeleteAllFab"),
 				icon = {
 					Icon(
 						imageVector = Icons.Default.Delete, contentDescription = stringResource(R.string.review_btn_delete_all)
@@ -167,9 +169,10 @@ fun ReviewScreen(
 			modifier = Modifier
 				.fillMaxSize()
 				.padding(paddingValues)
+				.testTag("ReviewScreen")
 		) {
 			if (deletedFiles.isEmpty()) {
-				EmptyState()
+				EmptyState(modifier = Modifier.testTag("ReviewEmptyState"))
 			} else {
 				PinchToZoomGridContainer(
 					modifier = Modifier.fillMaxSize(), initialLevel = 1, zoomLevels = zoomLevels
@@ -196,12 +199,15 @@ fun ReviewScreen(
 					}
 				}, onDismiss = {
 					showDeleteConfirmDialog = false
-				})
+				}, modifier = Modifier.testTag("ReviewDeleteAllDialog"))
 			}
 
 			selectedMediaForFullscreen?.let { media ->
 				FullscreenMediaViewer(
-					media = media, onDismiss = { selectedMediaForFullscreen = null })
+					media = media,
+					onDismiss = { selectedMediaForFullscreen = null },
+					modifier = Modifier.testTag("ReviewFullscreenViewer")
+				)
 			}
 		}
 	}
@@ -209,12 +215,12 @@ fun ReviewScreen(
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun EmptyState() {
+private fun EmptyState(modifier: Modifier = Modifier) {
 	val colorScheme = MaterialTheme.colorScheme
 	val spacing = AureaSpacing.current
 
 	Column(
-		modifier = Modifier
+		modifier = modifier
 			.fillMaxSize()
 			.padding(spacing.xl),
 		horizontalAlignment = Alignment.CenterHorizontally,
@@ -273,6 +279,7 @@ private fun ZoomableStaggeredGrid(
 		verticalItemSpacing = spacing.xs,
 		modifier = Modifier
 			.fillMaxSize()
+			.testTag("ReviewGrid")
 			.graphicsLayer {
 				scaleX = zoomTransition
 				scaleY = zoomTransition
@@ -462,6 +469,7 @@ private fun MediaGridItem(
 
 	Card(
 		modifier = Modifier
+			.testTag("ReviewGridItem_${file.id}")
 			.fillMaxWidth()
 			.height(baseHeight * heightMultiplier)
 			.pointerInput(Unit) {
@@ -575,9 +583,12 @@ private fun MediaGridItem(
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun DeleteAllConfirmationDialog(
-	itemCount: Int, onConfirm: () -> Unit, onDismiss: () -> Unit
+	itemCount: Int,
+	onConfirm: () -> Unit,
+	onDismiss: () -> Unit,
+	modifier: Modifier = Modifier
 ) {
-	AlertDialog(onDismissRequest = onDismiss, icon = {
+	AlertDialog(modifier = modifier, onDismissRequest = onDismiss, icon = {
 		Icon(
 			imageVector = Icons.Default.Delete,
 			contentDescription = null,
@@ -603,7 +614,9 @@ private fun DeleteAllConfirmationDialog(
 		)
 	}, confirmButton = {
 		Button(
-			onClick = onConfirm, colors = ButtonDefaults.buttonColors(
+			onClick = onConfirm,
+			modifier = Modifier.testTag("ReviewDeleteAllConfirm"),
+			colors = ButtonDefaults.buttonColors(
 				containerColor = MaterialTheme.colorScheme.error,
 				contentColor = MaterialTheme.colorScheme.onError
 			)
@@ -615,7 +628,7 @@ private fun DeleteAllConfirmationDialog(
 			)
 		}
 	}, dismissButton = {
-		TextButton(onClick = onDismiss) {
+		TextButton(onClick = onDismiss, modifier = Modifier.testTag("ReviewDeleteAllCancel")) {
 			Text(
 				text = stringResource(R.string.review_btn_cancel), style = MaterialTheme.typography.labelLargeEmphasized
 			)
@@ -626,13 +639,15 @@ private fun DeleteAllConfirmationDialog(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FullscreenMediaViewer(
-	media: MediaFileUi, onDismiss: () -> Unit
+	media: MediaFileUi,
+	onDismiss: () -> Unit,
+	modifier: Modifier = Modifier
 ) {
 	val context = LocalContext.current
 	val spacing = AureaSpacing.current
 
 	Box(
-		modifier = Modifier
+		modifier = modifier
 			.fillMaxSize()
 			.background(Color.Black)
 	) {
@@ -666,7 +681,7 @@ private fun FullscreenMediaViewer(
 			shape = CircleShape,
 			color = Color.Black.copy(alpha = 0.5f)
 		) {
-			IconButton(onClick = onDismiss) {
+			IconButton(onClick = onDismiss, modifier = Modifier.testTag("ReviewFullscreenClose")) {
 				Icon(
 					imageVector = Icons.Default.Close,
 					contentDescription = stringResource(R.string.content_desc_close),
